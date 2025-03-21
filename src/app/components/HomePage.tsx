@@ -1,7 +1,8 @@
 'use client';
 
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
+import { useRef } from "react";
 
 // Animation variants
 const fadeInUp = {
@@ -19,18 +20,45 @@ const staggerContainer = {
 };
 
 const featureCardVariants = {
-  initial: { opacity: 0, y: 30 },
-  animate: { opacity: 1, y: 0 }
+  initial: { opacity: 0, y: 30, scale: 0.9 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  hover: { 
+    scale: 1.05,
+    y: -10,
+    transition: { type: "spring", stiffness: 400, damping: 10 }
+  }
+};
+
+const logoHoverVariants = {
+  initial: { scale: 1 },
+  hover: { 
+    scale: 1.1,
+    transition: { type: "spring", stiffness: 400, damping: 10 }
+  }
 };
 
 export default function HomePage() {
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5, 1], [1, 0.5, 0]);
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" ref={containerRef}>
       {/* Navigation */}
       <nav className="bg-[rgba(255,255,255,0.8)] backdrop-blur-md fixed w-full z-50 border-b border-gray-200">
         <div className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
-            <div className="h-8">
+            <motion.div 
+              className="h-8"
+              variants={logoHoverVariants}
+              initial="initial"
+              whileHover="hover"
+            >
               <Image
                 src="/images/pong-bros-logo.png"
                 alt="Pong Bros Logo"
@@ -38,11 +66,24 @@ export default function HomePage() {
                 height={32}
                 className="h-8 w-auto"
               />
-            </div>
+            </motion.div>
             <div className="flex gap-8 text-sm">
-              <a href="#features" className="text-gray-800 hover:text-gray-600">Features</a>
-              <a href="#notify" className="text-gray-800 hover:text-gray-600">Get Notified</a>
-              <a href="#about" className="text-gray-800 hover:text-gray-600">About</a>
+              {["features", "notify", "about"].map((item) => (
+                <motion.a
+                  key={item}
+                  href={`#${item}`}
+                  className="text-gray-800 relative group"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <span className="capitalize">{item}</span>
+                  <motion.span
+                    className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF9500] origin-left"
+                    initial={{ scaleX: 0 }}
+                    whileHover={{ scaleX: 1 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                </motion.a>
+              ))}
             </div>
           </div>
         </div>
@@ -50,6 +91,12 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <header className="pt-32 pb-16 text-center relative overflow-hidden">
+        <motion.div 
+          className="absolute inset-0 -z-10"
+          style={{ y, opacity }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-[#FF9500]/10 to-transparent" />
+        </motion.div>
         <motion.div 
           className="max-w-4xl mx-auto px-4"
           initial="initial"
@@ -60,6 +107,8 @@ export default function HomePage() {
           <motion.div
             className="mb-8"
             variants={fadeInUp}
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
             <Image
               src="/images/pong-bros-logo.png"
@@ -149,13 +198,21 @@ export default function HomePage() {
             ].map((feature, index) => (
               <motion.div
                 key={index}
-                className={`bg-gradient-to-br ${feature.gradient} rounded-3xl p-8 text-white transform transition-all hover:scale-[1.02] hover:shadow-lg`}
+                className={`bg-gradient-to-br ${feature.gradient} rounded-3xl p-8 text-white transform cursor-pointer`}
                 variants={featureCardVariants}
+                whileHover="hover"
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
+                <motion.div
+                  initial={{ rotate: 0 }}
+                  whileHover={{ rotate: 360, scale: 1.2 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-6xl mb-6"
+                >
+                  {feature.icon}
+                </motion.div>
                 <h3 className="text-2xl font-medium mb-4">{feature.title}</h3>
-                <p className="text-lg mb-8 opacity-90">{feature.description}</p>
-                <span className="text-6xl">{feature.icon}</span>
+                <p className="text-lg opacity-90">{feature.description}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -188,17 +245,22 @@ export default function HomePage() {
               variants={fadeInUp}
             >
               <form className="flex gap-4 justify-center">
-                <input
+                <motion.input
                   type="email"
                   placeholder="Enter your email"
                   className="flex-1 px-6 py-3 rounded-full border border-gray-300 focus:outline-none focus:border-[#FF9500]"
+                  whileFocus={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 />
-                <button
+                <motion.button
                   type="submit"
-                  className="bg-[#FF9500] hover:bg-[#FFB44C] text-white font-medium py-3 px-8 rounded-full transition-all"
+                  className="bg-[#FF9500] text-white font-medium py-3 px-8 rounded-full"
+                  whileHover={{ scale: 1.05, backgroundColor: "#FFB44C" }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
                   Notify Me
-                </button>
+                </motion.button>
               </form>
             </motion.div>
           </motion.div>
