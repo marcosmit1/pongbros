@@ -36,14 +36,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
             <div className="h-8">
-              <Image
-                src="/images/pong-bros-logo.png"
-                alt="Pong Bros Logo"
-                width={100}
-                height={50}
-                className="h-full w-auto"
-                priority
-              />
+              <h1 className="text-2xl font-bold text-gray-900">Pong Bros</h1>
             </div>
             <div className="flex gap-8 text-sm">
               <a href="#features" className="text-gray-800 hover:text-gray-600">Features</a>
@@ -67,14 +60,7 @@ export default function HomePage() {
             className="mb-8"
             variants={fadeInUp}
           >
-            <Image
-              src="/images/pong-bros-logo.png"
-              alt="Pong Bros Logo"
-              width={200}
-              height={100}
-              className="mx-auto"
-              priority
-            />
+            <h1 className="text-6xl font-bold text-gray-900 mb-4">Pong Bros</h1>
           </motion.div>
           <motion.h2 
             className="text-3xl font-medium mb-6 text-gray-600"
