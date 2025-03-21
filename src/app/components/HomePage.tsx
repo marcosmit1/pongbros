@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 // Animation variants
 const fadeInUp = {
@@ -30,7 +31,13 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
             <div className="h-8">
-              <h1 className="text-2xl font-bold text-gray-900">Pong Bros</h1>
+              <Image
+                src="/images/pong-bros-logo.png"
+                alt="Pong Bros Logo"
+                width={120}
+                height={32}
+                className="h-8 w-auto"
+              />
             </div>
             <div className="flex gap-8 text-sm">
               <a href="#features" className="text-gray-800 hover:text-gray-600">Features</a>
@@ -54,7 +61,14 @@ export default function HomePage() {
             className="mb-8"
             variants={fadeInUp}
           >
-            <h1 className="text-6xl font-bold text-gray-900 mb-4">Pong Bros</h1>
+            <Image
+              src="/images/pong-bros-logo.png"
+              alt="Pong Bros Logo"
+              width={300}
+              height={80}
+              className="mx-auto mb-8"
+              priority
+            />
           </motion.div>
           <motion.h2 
             className="text-3xl font-medium mb-6 text-gray-600"
