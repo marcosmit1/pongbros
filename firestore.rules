@@ -2,32 +2,38 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Bar document rules
-    match /bars/{barId} {
-      // Allow read/write if the user is the bar owner
-      allow read, write: if request.auth != null && request.auth.uid == barId;
+    // Venue document rules
+    match /venues/{venueId} {
+      // Allow read access to all authenticated users (for the mobile app)
+      allow read: if request.auth != null;
       
-      // Allow creation during registration
-      allow create: if request.auth != null && 
-                   request.auth.uid == barId &&
-                   request.resource.data.keys().hasAll(['name', 'address', 'pricePerHour', 'tables']);
+      // Allow creation and updates if all required fields are present
+      allow create, update: if request.auth != null &&
+                   request.resource.data.keys().hasAll([
+                     'name', 'address', 'description', 'capacity',
+                     'pricePerHour', 'openingHours', 'location'
+                   ]) &&
+                   request.resource.data.openingHours.keys().hasAll([
+                     'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+                     'Friday', 'Saturday', 'Sunday'
+                   ]);
     }
     
     // Booking rules
     match /bookings/{bookingId} {
-      // Allow bars to read their own bookings
+      // Allow venues to read their own bookings
       allow read: if request.auth != null && 
-                 resource.data.barId == request.auth.uid;
+                 resource.data.venueId == request.auth.uid;
       
-      // Allow bars to update booking status
+      // Allow venues to update booking status
       allow update: if request.auth != null && 
-                   resource.data.barId == request.auth.uid &&
+                   resource.data.venueId == request.auth.uid &&
                    request.resource.data.diff(resource.data).affectedKeys()
                      .hasOnly(['status']);
                      
-      // Allow creation of bookings (this will be used by the mobile app)
+      // Allow creation of bookings (for the mobile app)
       allow create: if request.auth != null &&
-                   request.resource.data.keys().hasAll(['barId', 'userId', 'tableNumber', 'date', 'duration', 'status']);
+                   request.resource.data.keys().hasAll(['venueId', 'userId', 'tableNumber', 'date', 'duration', 'status']);
     }
   }
 } 
