@@ -13,6 +13,8 @@ interface Bar {
   name: string;
   address: string;
   imageURL: string;
+  status: 'active' | 'inactive';
+  lastBooking?: string;
 }
 
 export default function BarsPage() {
@@ -53,82 +55,112 @@ export default function BarsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-2xl font-semibold text-gray-700">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="loading-container">
+          <div className="loading-bubble"></div>
+          <div className="loading-bubble"></div>
+          <div className="loading-bubble"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Your Bars</h1>
+    <div className="min-h-screen relative">
+      {/* Background with bubble effect */}
+      <div className="bubble-bg" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-[var(--font-size-title)] font-[var(--font-weight-bold)] foam-text">
+              Your Bars
+            </h1>
+            <p className="text-[var(--font-size-subheadline)] opacity-80 mt-2">
+              Manage your venues and view their dashboards
+            </p>
+          </div>
+          <Link
+            href="/bars/add"
+            className="primary-button"
+          >
+            Add New Bar
+          </Link>
+        </div>
+
+        {error && (
+          <div className="status-badge live w-full justify-center mb-6">
+            {error}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {bars.map((bar) => (
+            <div
+              key={bar.id}
+              className="card hover:scale-[1.02]"
+            >
+              <div className="relative h-48 w-full mb-4 rounded-lg overflow-hidden">
+                {bar.imageURL ? (
+                  <Image
+                    src={bar.imageURL}
+                    alt={bar.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-[var(--beer-amber)] to-[var(--beer-dark-brown)] opacity-50" />
+                )}
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
+                    {bar.name}
+                  </h3>
+                  <span className={`status-badge ${bar.status === 'active' ? 'live' : 'completed'}`}>
+                    {bar.status === 'active' ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                
+                <p className="text-[var(--font-size-subheadline)] opacity-80">
+                  {bar.address}
+                </p>
+                
+                {bar.lastBooking && (
+                  <p className="text-[var(--font-size-caption)] opacity-60">
+                    Last booking: {bar.lastBooking}
+                  </p>
+                )}
+
+                <Link
+                  href={`/dashboard/${bar.id}`}
+                  className="secondary-button w-full text-center mt-4"
+                >
+                  View Dashboard
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {bars.length === 0 && (
+          <div className="card text-center py-12">
+            <h3 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
+              No bars yet
+            </h3>
+            <p className="text-[var(--font-size-subheadline)] opacity-80 mt-2 mb-6">
+              Get started by adding your first bar.
+            </p>
             <Link
               href="/bars/add"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md"
+              className="primary-button inline-flex"
             >
               Add New Bar
             </Link>
           </div>
-
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-500 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {bars.map((bar) => (
-              <div
-                key={bar.id}
-                className="bg-white overflow-hidden shadow rounded-lg"
-              >
-                {bar.imageURL && (
-                  <div className="h-48 w-full relative">
-                    <Image
-                      src={bar.imageURL}
-                      alt={bar.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  </div>
-                )}
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg font-medium text-gray-900">{bar.name}</h3>
-                  <p className="mt-1 text-sm text-gray-500">{bar.address}</p>
-                  <div className="mt-4">
-                    <Link
-                      href={`/dashboard/${bar.id}`}
-                      className="text-indigo-600 hover:text-indigo-900"
-                    >
-                      View Dashboard →
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {bars.length === 0 && (
-            <div className="text-center py-12">
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No bars yet</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Get started by adding your first bar.
-              </p>
-              <div className="mt-6">
-                <Link
-                  href="/bars/add"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  Add New Bar
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

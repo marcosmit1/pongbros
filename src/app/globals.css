@@ -1,26 +1,223 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Background Colors */
+  --background: #0D0D1A;
+  --surface: #1A1A33;
+
+  /* Accent Colors */
+  --primary: #7250D9;
+  --secondary: #4A96ED;
+  --accent: #FFA500;
+
+  /* Beer Colors */
+  --beer-amber: #F09633;
+  --beer-foam: #FAF0D6;
+  --beer-dark-brown: #4A2917;
+  --beer-golden: #FAD659;
+  --beer-red-cup: #FF0000;
+
+  /* Beer Style Gradients */
+  --lager-gradient: linear-gradient(135deg, #8B4513, #C17817);
+  --ipa-gradient: linear-gradient(135deg, #8B4513, #FF8C00);
+  --stout-gradient: linear-gradient(135deg, #2C2C2C, #463E3F);
+
+  /* Font Sizes */
+  --font-size-caption: 11px;
+  --font-size-body: 16px;
+  --font-size-subheadline: 15px;
+  --font-size-headline: 17px;
+  --font-size-title3: 20px;
+  --font-size-title2: 22px;
+  --font-size-title: 28px;
+  --font-size-large-title: 34px;
+
+  /* Font Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
+
+  /* Spacing */
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Base Styles */
+body {
+  background-color: var(--background);
+  color: var(--beer-foam);
+  font-family: "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Component Classes */
+.primary-button {
+  @apply px-6 py-3 rounded-xl font-semibold min-h-[44px] transition-all duration-200;
+  background: var(--beer-red-cup);
+  color: var(--beer-foam);
+}
+
+.primary-button:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+.secondary-button {
+  @apply px-6 py-3 rounded-xl font-semibold min-h-[44px] transition-all duration-200;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--beer-foam);
+}
+
+.secondary-button:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.text-input {
+  @apply px-4 py-3 rounded-xl min-h-[44px] w-full transition-all duration-200;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--beer-foam);
+}
+
+.text-input:focus {
+  border-color: var(--beer-foam);
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.card {
+  @apply p-4 rounded-[20px] transition-all duration-200;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.status-badge {
+  @apply px-2 py-1 rounded-xl text-xs font-bold inline-flex items-center;
+}
+
+.status-badge.upcoming {
+  color: var(--beer-amber);
+  background: rgba(240, 150, 51, 0.2);
+  border: 1px solid rgba(240, 150, 51, 0.3);
+}
+
+.status-badge.live {
+  color: var(--beer-red-cup);
+  background: rgba(255, 0, 0, 0.2);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.status-badge.completed {
+  color: var(--beer-foam);
+  background: rgba(250, 240, 214, 0.2);
+  border: 1px solid rgba(250, 240, 214, 0.3);
+}
+
+.glass-effect {
+  @apply backdrop-blur-md;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.foam-text {
+  background: linear-gradient(to bottom, var(--beer-foam), rgba(250, 240, 214, 0.7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Loading Animation */
+@keyframes bubble {
+  0% {
+    transform: translateY(100%) scale(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%) scale(1);
+    opacity: 0;
   }
 }
 
-body {
+.loading-bubble {
+  @apply absolute rounded-full;
+  background: rgba(250, 240, 214, 0.2);
+  animation: bubble 2s infinite ease-in-out;
+}
+
+.loading-container {
+  @apply relative h-12 w-12;
+}
+
+.loading-container .loading-bubble:nth-child(1) {
+  left: 20%;
+  width: 8px;
+  height: 8px;
+  animation-delay: 0s;
+}
+
+.loading-container .loading-bubble:nth-child(2) {
+  left: 40%;
+  width: 10px;
+  height: 10px;
+  animation-delay: 0.2s;
+}
+
+.loading-container .loading-bubble:nth-child(3) {
+  left: 60%;
+  width: 7px;
+  height: 7px;
+  animation-delay: 0.4s;
+}
+
+/* Responsive Typography */
+@media (min-width: 640px) {
+  :root {
+    --font-size-body: 18px;
+    --font-size-headline: 19px;
+    --font-size-title: 32px;
+    --font-size-large-title: 40px;
+  }
+}
+
+/* Background Bubble Animation */
+.bubble-bg {
+  @apply fixed inset-0 -z-10 overflow-hidden;
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+.bubble-bg::before {
+  content: '';
+  @apply absolute inset-0;
+  background: radial-gradient(circle at center, 
+    rgba(250, 240, 214, 0.1) 0%,
+    rgba(250, 240, 214, 0.05) 25%,
+    rgba(250, 240, 214, 0) 70%
+  );
 }

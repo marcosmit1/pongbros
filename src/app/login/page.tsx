@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db, auth } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -29,13 +30,10 @@ export default function Login() {
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.empty) {
-        // No bars found, redirect to add bar page
         router.push('/bars/add');
       } else if (querySnapshot.size === 1) {
-        // One bar found, redirect to its dashboard
         router.push(`/dashboard/${querySnapshot.docs[0].id}`);
       } else {
-        // Multiple bars found, redirect to bars management page
         router.push('/bars');
       }
     } catch (error) {
@@ -47,74 +45,102 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-            create a new account
-          </Link>
-        </p>
+    <div className="min-h-screen flex flex-col justify-center relative">
+      {/* Background with bubble effect */}
+      <div className="bubble-bg">
+        <div className="loading-container">
+          <div className="loading-bubble"></div>
+          <div className="loading-bubble"></div>
+          <div className="loading-bubble"></div>
+        </div>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
+        <div className="text-center mb-8">
+          <Image
+            src="/logo.png"
+            alt="Pong Bros Logo"
+            width={120}
+            height={120}
+            className="mx-auto"
+          />
+          <h2 className="mt-6 text-[var(--font-size-large-title)] font-[var(--font-weight-bold)] foam-text">
+            Welcome Back
+          </h2>
+          <p className="mt-2 text-[var(--font-size-subheadline)] opacity-80">
+            Sign in to manage your venues
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10">
+        <div className="card mx-4 sm:mx-0">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-500 text-red-700 px-4 py-3 rounded">
+              <div className="status-badge live w-full justify-center">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-[var(--font-size-subheadline)] font-[var(--font-weight-medium)] mb-2">
                 Email address
               </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="text-input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-[var(--font-size-subheadline)] font-[var(--font-weight-medium)] mb-2">
                 Password
               </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="text-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
 
             <div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="primary-button w-full flex justify-center"
               >
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? (
+                  <div className="loading-container scale-75">
+                    <div className="loading-bubble"></div>
+                    <div className="loading-bubble"></div>
+                    <div className="loading-bubble"></div>
+                  </div>
+                ) : (
+                  'Sign in'
+                )}
               </button>
             </div>
           </form>
+
+          <div className="mt-6 text-center">
+            <Link 
+              href="/register" 
+              className="text-[var(--font-size-subheadline)] hover:opacity-80 transition-opacity"
+            >
+              Don't have an account? Sign up
+            </Link>
+          </div>
         </div>
       </div>
     </div>
