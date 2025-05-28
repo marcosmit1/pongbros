@@ -1,0 +1,314 @@
+'use client';
+
+import { useState, useEffect, Suspense } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { useRouter, useParams } from 'next/navigation';
+import { GeoPoint } from 'firebase/firestore';
+import Image from 'next/image';
+
+interface Booking {
+  id: string;
+  venueId: string;
+  userId: string;
+  tableNumber: number;
+  date: Date;
+  timeSlot: string;
+  numberOfPlayers: number;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface VenueData {
+  id: string;
+  name: string;
+  address: string;
+  description: string;
+  capacity: number;
+  pricePerHour: number;
+  imageURL: string;
+  location: GeoPoint;
+  ownerId: string;
+  openingHours: {
+    [key: string]: { opens: string; closes: string };
+  };
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="loading-container">
+        <div className="loading-bubble"></div>
+        <div className="loading-bubble"></div>
+        <div className="loading-bubble"></div>
+      </div>
+    </div>
+  );
+}
+
+function VenueDashboardContent() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [venueData, setVenueData] = useState<VenueData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const { user } = useAuth();
+  const router = useRouter();
+  const params = useParams();
+  const venueId = params?.venueId as string;
+
+  const handleBookingAction = async (bookingId: string, action: 'confirm' | 'cancel') => {
+    try {
+      const bookingRef = doc(db, 'bookings', bookingId);
+      await updateDoc(bookingRef, {
+        status: action === 'confirm' ? 'confirmed' : 'cancelled',
+        updatedAt: new Date()
+      });
+
+      // Update local state
+      setBookings(prevBookings => 
+        prevBookings.map(booking => 
+          booking.id === bookingId 
+            ? { ...booking, status: action === 'confirm' ? 'confirmed' : 'cancelled' }
+            : booking
+        )
+      );
+    } catch (error) {
+      console.error(`Error ${action}ing booking:`, error);
+      setError(`Failed to ${action} booking. Please try again.`);
+    }
+  };
+
+  useEffect(() => {
+    if (!user) {
+      console.log('No user found, redirecting to login');
+      router.push('/login');
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        // Fetch venue data
+        const venueDoc = await getDoc(doc(db, 'venues', venueId));
+        
+        if (!venueDoc.exists()) {
+          console.error('Venue not found:', venueId);
+          setError('Venue not found. Please check the URL or contact support.');
+          return;
+        }
+
+        // Verify ownership
+        const venueData = {
+          id: venueDoc.id,
+          ...venueDoc.data()
+        } as VenueData;
+
+        if (venueData.ownerId !== user.uid) {
+          setError('You do not have permission to view this venue.');
+          return;
+        }
+        
+        setVenueData(venueData);
+
+        // Fetch today's bookings
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const bookingsRef = collection(db, 'bookings');
+        const q = query(
+          bookingsRef,
+          where('venueId', '==', venueId),
+          where('date', '>=', today),
+          where('date', '<', tomorrow)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const fetchedBookings = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().date.toDate(),
+          createdAt: doc.data().createdAt?.toDate(),
+          updatedAt: doc.data().updatedAt?.toDate()
+        })) as Booking[];
+
+        setBookings(fetchedBookings);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to load venue data. Please try refreshing the page.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (venueId) {
+      fetchData();
+    }
+  }, [user, router, venueId]);
+
+  if (loading) {
+    return <LoadingFallback />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="status-badge error mb-4">
+          {error}
+        </div>
+        <button
+          onClick={() => router.push('/bars')}
+          className="secondary-button"
+        >
+          Back to Bars
+        </button>
+      </div>
+    );
+  }
+
+  if (!venueData) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <nav className="glass-effect">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <h1 className="text-[var(--font-size-title)] font-[var(--font-weight-bold)] foam-text">
+                {venueData.name}
+              </h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push('/bars')}
+                className="secondary-button"
+              >
+                All Bars
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Today's Stats */}
+          <div className="card">
+            <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] mb-4">
+              Today's Stats
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <p className="text-[var(--font-size-subheadline)] opacity-80">Total Bookings</p>
+                <p className="text-[var(--font-size-title)] font-[var(--font-weight-bold)] text-primary">
+                  {bookings.length}
+                </p>
+              </div>
+              <div>
+                <p className="text-[var(--font-size-subheadline)] opacity-80">Active Tables</p>
+                <p className="text-[var(--font-size-title)] font-[var(--font-weight-bold)] text-primary">
+                  {bookings.filter(b => b.status === 'confirmed').length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bookings */}
+          <div className="card">
+            <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] mb-4">
+              Today's Bookings
+            </h2>
+            <div className="space-y-4">
+              {bookings.length > 0 ? (
+                bookings.map(booking => (
+                  <div key={booking.id} className="p-4 glass-effect rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-[var(--font-size-body)] font-[var(--font-weight-medium)]">
+                          Table {booking.tableNumber}
+                        </p>
+                        <p className="text-[var(--font-size-caption)] opacity-60">
+                          Time: {booking.timeSlot}
+                        </p>
+                        <p className="text-[var(--font-size-caption)] opacity-60">
+                          Players: {booking.numberOfPlayers}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className={`status-badge ${
+                          booking.status === 'confirmed' ? 'success' : 
+                          booking.status === 'pending' ? 'warning' : 
+                          'error'
+                        }`}>
+                          {booking.status}
+                        </span>
+                        {booking.status === 'pending' && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleBookingAction(booking.id, 'confirm')}
+                              className="primary-button text-xs py-1 px-2"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => handleBookingAction(booking.id, 'cancel')}
+                              className="secondary-button text-xs py-1 px-2"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center p-6 glass-effect rounded-lg">
+                  <p className="text-[var(--font-size-body)] opacity-60">No bookings for today</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Venue Info */}
+          <div className="card">
+            <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] mb-4">
+              Venue Information
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <p className="text-[var(--font-size-subheadline)] opacity-80">Address</p>
+                <p className="text-[var(--font-size-body)]">{venueData.address}</p>
+              </div>
+              <div>
+                <p className="text-[var(--font-size-subheadline)] opacity-80">Capacity</p>
+                <p className="text-[var(--font-size-body)]">{venueData.capacity} people</p>
+              </div>
+              <div>
+                <p className="text-[var(--font-size-subheadline)] opacity-80">Price per Hour</p>
+                <p className="text-[var(--font-size-body)]">R{venueData.pricePerHour}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function VenueDashboard() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <VenueDashboardContent />
+    </Suspense>
+  );
+} 

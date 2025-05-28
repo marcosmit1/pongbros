@@ -25,9 +25,8 @@ service cloud.firestore {
              tournamentData.participants.hasAny([request.auth.uid + '@guest']);
     }
 
-    function isVenueOwner(venueId) {
-      return isAuthenticated() && 
-        get(/databases/$(database)/documents/venues/$(venueId)).data.ownerId == request.auth.uid;
+    function isVenueOwner(venueData) {
+      return isAuthenticated() && request.auth.uid == venueData.ownerId;
     }
 
     // Games collection
@@ -46,16 +45,9 @@ service cloud.firestore {
 
     // User profiles
     match /users/{userId} {
-      allow read: if true;  // This will allow username checks
+      allow read: if true;  // Allow username checks
       allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update: if isAuthenticated() && (
-        // Allow users to update their own profile, including profile image
-        (request.auth.uid == userId && 
-         (request.resource.data.diff(resource.data).affectedKeys()
-          .hasAny(['profileImageURL', 'username', 'email', 'name']))) || 
-        // Allow admins to update admin status
-        (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isAdmin']))
-      );
+      allow update: if isAuthenticated() && request.auth.uid == userId;
       
       match /friends/{friendId} {
         allow read, write: if isAuthenticated() && 
@@ -124,66 +116,30 @@ service cloud.firestore {
       allow write: if isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Venue management
+    // Venues collection (renamed from venues to match our structure)
     match /venues/{venueId} {
-      // Allow public read access to venues
-      allow read: if true;
-      
-      // Allow creation of venues by any authenticated user
-      allow create: if isAuthenticated() && 
-                   request.resource.data.ownerId == request.auth.uid &&
-                   request.resource.data.keys().hasAll([
-                     'name', 'address', 'description', 'capacity',
-                     'pricePerHour', 'openingHours', 'location', 'ownerId'
-                   ]);
-      
-      // Allow venues to be updated by their owners or admins
-      allow update: if isAuthenticated() && (
-        isAdmin() ||
-        (resource.data.ownerId == request.auth.uid &&
-         request.resource.data.ownerId == request.auth.uid)
-      );
-                   
-      // Allow venues to be deleted by their owners or admins
-      allow delete: if isAuthenticated() && (
-        isAdmin() ||
-        resource.data.ownerId == request.auth.uid
-      );
+      allow read: if true;  // Allow public read access to venues
+      allow create: if isAuthenticated();  // Allow authenticated users to create venues
+      allow update: if isAuthenticated() && 
+        (isVenueOwner(resource.data) || isAdmin());  // Allow venue owners and admins to update
+      allow delete: if isAuthenticated() && 
+        (isVenueOwner(resource.data) || isAdmin());  // Allow venue owners and admins to delete
     }
 
     // Bookings collection
     match /bookings/{bookingId} {
-      // Allow read access to:
-      // 1. The user who made the booking
-      // 2. The venue owner of the booking
-      // 3. Admins
-      allow read: if isAuthenticated() && (
-        request.auth.uid == resource.data.userId ||
-        request.auth.uid == resource.data.venueId ||
-        isAdmin()
-      );
-      
-      // Allow creation of bookings by any authenticated user
-      allow create: if isAuthenticated() &&
-                   request.resource.data.keys().hasAll([
-                     'venueId', 'userId', 'tableNumber', 
-                     'date', 'duration', 'status'
-                   ]);
-      
-      // Allow updates:
-      // 1. By the user who made the booking
-      // 2. By the venue owner (but only the status field)
-      // 3. By admins
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
       allow update: if isAuthenticated() && (
-        request.auth.uid == resource.data.userId ||
-        (request.auth.uid == resource.data.venueId && 
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])) ||
-        isAdmin()
+        request.auth.uid == resource.data.userId ||  // Booking user can update
+        get(/databases/$(database)/documents/venues/$(resource.data.venueId)).data.ownerId == request.auth.uid ||  // Venue owner can update
+        isAdmin()  // Admin can update
       );
-      
-      // Allow deletion by the booking user or admins
-      allow delete: if isAuthenticated() && 
-        (request.auth.uid == resource.data.userId || isAdmin());
+      allow delete: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId ||  // Booking user can delete
+        get(/databases/$(database)/documents/venues/$(resource.data.venueId)).data.ownerId == request.auth.uid ||  // Venue owner can delete
+        isAdmin()  // Admin can delete
+      );
     }
   }
 } 

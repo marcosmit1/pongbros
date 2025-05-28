@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, auth } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -24,16 +24,37 @@ export default function Login() {
     try {
       await signIn(email, password);
       
-      // After successful sign in, check if user has any bars
+      // First try to get venue by user ID directly
+      const venueDoc = await getDoc(doc(db, 'venues', auth.currentUser!.uid));
+      
+      if (venueDoc.exists()) {
+        console.log('Found venue by user ID:', venueDoc.id);
+        router.push(`/dashboard/${venueDoc.id}`);
+        return;
+      }
+      
+      console.log('No venue found by user ID, checking ownerId field...');
+      
+      // If not found, try the old query method
       const venuesRef = collection(db, 'venues');
       const q = query(venuesRef, where('ownerId', '==', auth.currentUser!.uid));
       const querySnapshot = await getDocs(q);
       
+      console.log('Query results:', {
+        empty: querySnapshot.empty,
+        size: querySnapshot.size,
+        docs: querySnapshot.docs.map(d => ({ id: d.id, data: d.data() }))
+      });
+      
       if (querySnapshot.empty) {
+        console.log('No venues found at all, redirecting to add bar page');
         router.push('/bars/add');
       } else if (querySnapshot.size === 1) {
-        router.push(`/dashboard/${querySnapshot.docs[0].id}`);
+        const venueId = querySnapshot.docs[0].id;
+        console.log('Found one venue by ownerId, redirecting to dashboard:', venueId);
+        router.push(`/dashboard/${venueId}`);
       } else {
+        console.log('Multiple venues found, redirecting to bars page');
         router.push('/bars');
       }
     } catch (error) {
@@ -45,10 +66,15 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center relative">
+    <div className="min-h-screen flex flex-col justify-center relative overflow-hidden">
       {/* Background with bubble effect */}
       <div className="bubble-bg">
-        <div className="loading-container">
+        <div className="loading-container absolute top-1/4 left-1/4">
+          <div className="loading-bubble"></div>
+          <div className="loading-bubble"></div>
+          <div className="loading-bubble"></div>
+        </div>
+        <div className="loading-container absolute top-2/3 right-1/3">
           <div className="loading-bubble"></div>
           <div className="loading-bubble"></div>
           <div className="loading-bubble"></div>
@@ -57,18 +83,20 @@ export default function Login() {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
         <div className="text-center mb-8">
-          <Image
-            src="/logo.png"
-            alt="Pong Bros Logo"
-            width={120}
-            height={120}
-            className="mx-auto"
-          />
-          <h2 className="mt-6 text-[var(--font-size-large-title)] font-[var(--font-weight-bold)] foam-text">
+          <Link href="/" className="inline-block">
+            <Image
+              src="/images/pong-bros-logo.png"
+              alt="Pong Bros Logo"
+              width={120}
+              height={120}
+              className="mx-auto logo-glow hover:scale-105 transition-transform duration-300"
+            />
+          </Link>
+          <h2 className="mt-6 text-[var(--font-size-title)] font-[var(--font-weight-bold)] foam-text">
             Welcome Back
           </h2>
-          <p className="mt-2 text-[var(--font-size-subheadline)] opacity-80">
-            Sign in to manage your venues
+          <p className="mt-2 text-[var(--font-size-subheadline)] text-beer-foam opacity-80">
+            Sign in to your bar account
           </p>
         </div>
       </div>
@@ -77,14 +105,14 @@ export default function Login() {
         <div className="card mx-4 sm:mx-0">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="status-badge live w-full justify-center">
+              <div className="status-badge error">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-[var(--font-size-subheadline)] font-[var(--font-weight-medium)] mb-2">
-                Email address
+              <label htmlFor="email" className="form-label">
+                Email Address
               </label>
               <input
                 id="email"
@@ -95,11 +123,12 @@ export default function Login() {
                 className="text-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-[var(--font-size-subheadline)] font-[var(--font-weight-medium)] mb-2">
+              <label htmlFor="password" className="form-label">
                 Password
               </label>
               <input
@@ -111,6 +140,7 @@ export default function Login() {
                 className="text-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
               />
             </div>
 
@@ -118,7 +148,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="primary-button w-full flex justify-center"
+                className="primary-button w-full flex justify-center items-center min-h-[48px]"
               >
                 {loading ? (
                   <div className="loading-container scale-75">
@@ -127,20 +157,17 @@ export default function Login() {
                     <div className="loading-bubble"></div>
                   </div>
                 ) : (
-                  'Sign in'
+                  'Sign In'
                 )}
               </button>
             </div>
-          </form>
 
-          <div className="mt-6 text-center">
-            <Link 
-              href="/register" 
-              className="text-[var(--font-size-subheadline)] hover:opacity-80 transition-opacity"
-            >
-              Don&apos;t have an account? Sign up
-            </Link>
-          </div>
+            <div className="text-center mt-4">
+              <Link href="/register" className="text-link">
+                Don&apos;t have an account? Register your bar
+              </Link>
+            </div>
+          </form>
         </div>
       </div>
     </div>

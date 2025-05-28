@@ -3,36 +3,29 @@
 @tailwind utilities;
 
 :root {
-  /* Background Colors */
-  --background: #0D0D1A;
-  --surface: #1A1A33;
+  /* Color Palette */
+  --background: #0A0908;
+  --surface: #1A1917;
+  --primary: #FFB627;
+  --secondary: #F4A259;
+  --accent: #F25C05;
+  
+  /* Beer Theme Colors */
+  --beer-amber: #F2A900;
+  --beer-foam: #FFF5E6;
+  --beer-dark-brown: #32221A;
+  --beer-golden: #FFD700;
+  --beer-red-cup: #FF2E2E;
 
-  /* Accent Colors */
-  --primary: #7250D9;
-  --secondary: #4A96ED;
-  --accent: #FFA500;
-
-  /* Beer Colors */
-  --beer-amber: #F09633;
-  --beer-foam: #FAF0D6;
-  --beer-dark-brown: #4A2917;
-  --beer-golden: #FAD659;
-  --beer-red-cup: #FF0000;
-
-  /* Beer Style Gradients */
-  --lager-gradient: linear-gradient(135deg, #8B4513, #C17817);
-  --ipa-gradient: linear-gradient(135deg, #8B4513, #FF8C00);
-  --stout-gradient: linear-gradient(135deg, #2C2C2C, #463E3F);
-
-  /* Font Sizes */
-  --font-size-caption: 11px;
-  --font-size-body: 16px;
-  --font-size-subheadline: 15px;
-  --font-size-headline: 17px;
-  --font-size-title3: 20px;
-  --font-size-title2: 22px;
-  --font-size-title: 28px;
-  --font-size-large-title: 34px;
+  /* Typography */
+  --font-size-caption: 0.75rem;
+  --font-size-body: 1rem;
+  --font-size-subheadline: 1.125rem;
+  --font-size-headline: 1.25rem;
+  --font-size-title3: 1.5rem;
+  --font-size-title2: 1.75rem;
+  --font-size-title: 2rem;
+  --font-size-large-title: 3rem;
 
   /* Font Weights */
   --font-weight-regular: 400;
@@ -42,188 +35,155 @@
   --font-weight-black: 900;
 
   /* Spacing */
-  --spacing-xxs: 4px;
-  --spacing-xs: 8px;
-  --spacing-sm: 12px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-xxl: 48px;
+  --spacing-xxs: 0.25rem;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-xxl: 3rem;
 
   /* Shadows */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.14);
 
   /* Transitions */
-  --transition-fast: 0.2s ease;
-  --transition-normal: 0.3s ease;
-  --transition-slow: 0.5s ease;
+  --transition-fast: 150ms;
+  --transition-normal: 300ms;
+  --transition-slow: 500ms;
+
+  /* Gradients */
+  --lager-gradient: linear-gradient(135deg, var(--beer-golden) 0%, var(--beer-amber) 100%);
+  --ipa-gradient: linear-gradient(135deg, var(--beer-amber) 0%, var(--beer-red-cup) 100%);
+  --stout-gradient: linear-gradient(135deg, var(--beer-dark-brown) 0%, var(--beer-amber) 100%);
 }
 
 /* Base Styles */
-@layer base {
-  body {
-    background-color: var(--background);
-    color: var(--beer-foam);
-    font-family: "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  }
+body {
+  @apply bg-background text-beer-foam;
 }
 
-/* Component Classes */
+/* Custom Components */
 @layer components {
   .primary-button {
-    @apply rounded-xl font-semibold min-h-[44px] transition-all duration-200 p-3;
-    background: var(--beer-red-cup);
-    color: var(--beer-foam);
-  }
-
-  .primary-button:hover {
-    transform: scale(1.05);
-    opacity: 0.9;
+    @apply px-6 py-3 bg-primary text-beer-dark-brown font-semibold rounded-xl 
+           hover:bg-opacity-90 transition-all duration-normal
+           shadow-lg hover:shadow-xl hover:-translate-y-0.5;
   }
 
   .secondary-button {
-    @apply rounded-xl font-semibold min-h-[44px] transition-all duration-200 p-3;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--beer-foam);
-  }
-
-  .secondary-button:hover {
-    transform: scale(1.05);
-    background: rgba(255, 255, 255, 0.15);
-  }
-
-  .text-input {
-    @apply rounded-xl min-h-[44px] w-full transition-all duration-200 p-3;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--beer-foam);
-  }
-
-  .text-input:focus {
-    border-color: var(--beer-foam);
-    outline: none;
-    background: rgba(255, 255, 255, 0.15);
+    @apply px-6 py-3 bg-surface border border-primary text-primary font-semibold 
+           rounded-xl hover:bg-primary hover:bg-opacity-10 transition-all duration-normal
+           shadow-lg hover:shadow-xl hover:-translate-y-0.5;
   }
 
   .card {
-    @apply p-4 rounded-[20px] transition-all duration-200;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-  }
-
-  .card:hover {
-    transform: translateY(-2px);
-  }
-
-  .status-badge {
-    @apply p-1 rounded-xl text-xs font-bold inline-flex items-center;
-  }
-
-  .status-badge.upcoming {
-    color: var(--beer-amber);
-    background: rgba(240, 150, 51, 0.2);
-    border: 1px solid rgba(240, 150, 51, 0.3);
-  }
-
-  .status-badge.live {
-    color: var(--beer-red-cup);
-    background: rgba(255, 0, 0, 0.2);
-    border: 1px solid rgba(255, 0, 0, 0.3);
-  }
-
-  .status-badge.completed {
-    color: var(--beer-foam);
-    background: rgba(250, 240, 214, 0.2);
-    border: 1px solid rgba(250, 240, 214, 0.3);
+    @apply bg-surface p-8 rounded-[20px] backdrop-blur-xl border border-opacity-10 border-white
+           bg-opacity-90 shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-all duration-normal
+           hover:shadow-[0_8px_32px_rgba(242,169,0,0.12)];
   }
 
   .glass-effect {
-    @apply backdrop-blur-md;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    @apply bg-surface bg-opacity-80 backdrop-blur-xl border-b border-opacity-10 border-white
+           shadow-[0_4px_30px_rgba(0,0,0,0.1)];
   }
 
-  .foam-text {
-    background: linear-gradient(to bottom, var(--beer-foam), rgba(250, 240, 214, 0.7));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-}
-
-/* Loading Animation */
-@layer utilities {
-  @keyframes bubble {
-    0% {
-      transform: translateY(100%) scale(0);
-      opacity: 0;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(-100%) scale(1);
-      opacity: 0;
-    }
+  .text-input {
+    @apply w-full px-4 py-3 bg-surface border border-opacity-20 border-white rounded-xl
+           text-beer-foam placeholder-opacity-60 placeholder-beer-foam
+           focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary
+           transition-all duration-normal;
   }
 
-  .loading-bubble {
-    @apply absolute rounded-full;
-    background: rgba(250, 240, 214, 0.2);
-    animation: bubble 2s infinite ease-in-out;
+  .status-badge {
+    @apply flex items-center px-4 py-2 rounded-lg text-sm font-medium;
   }
 
-  .loading-container {
-    @apply relative h-12 w-12;
+  .status-badge.error {
+    @apply bg-[#FF2E2E] bg-opacity-5 text-[#FF2E2E] text-opacity-90 
+           border border-[#FF2E2E] border-opacity-20
+           px-4 py-2 rounded-lg font-medium;
   }
 
-  .loading-container .loading-bubble:nth-child(1) {
-    left: 20%;
-    width: 8px;
-    height: 8px;
-    animation-delay: 0s;
+  .status-badge.live {
+    @apply bg-primary bg-opacity-10 text-primary border border-opacity-20 border-primary;
   }
 
-  .loading-container .loading-bubble:nth-child(2) {
-    left: 40%;
-    width: 10px;
-    height: 10px;
-    animation-delay: 0.2s;
+  /* Form Labels */
+  .form-label {
+    @apply block text-[var(--font-size-subheadline)] font-[var(--font-weight-medium)] mb-2 text-beer-foam opacity-90;
   }
 
-  .loading-container .loading-bubble:nth-child(3) {
-    left: 60%;
-    width: 7px;
-    height: 7px;
-    animation-delay: 0.4s;
+  /* Helper Text */
+  .helper-text {
+    @apply mt-2 text-[var(--font-size-caption)] text-beer-foam opacity-70;
+  }
+
+  /* Links */
+  .text-link {
+    @apply text-primary hover:text-opacity-80 transition-colors duration-normal;
   }
 }
 
-/* Responsive Typography */
-@media (min-width: 640px) {
-  :root {
-    --font-size-body: 18px;
-    --font-size-headline: 19px;
-    --font-size-title: 32px;
-    --font-size-large-title: 40px;
-  }
+/* Foam Text Effect */
+.foam-text {
+  text-shadow: 2px 2px 0px rgba(255, 245, 230, 0.2);
+  position: relative;
+  color: var(--beer-foam);
 }
 
-/* Background Bubble Animation */
+/* Logo Glow Effect */
+.logo-glow {
+  filter: drop-shadow(0 0 8px rgba(242, 169, 0, 0.4));
+}
+
+/* Bubble Background */
 .bubble-bg {
-  @apply fixed inset-0 -z-10 overflow-hidden;
-  background: var(--background);
+  @apply fixed inset-0 z-0 overflow-hidden pointer-events-none;
+  background: radial-gradient(circle at 50% 50%, 
+              rgba(242, 169, 0, 0.1) 0%, 
+              rgba(10, 9, 8, 0) 50%);
 }
 
-.bubble-bg::before {
-  content: '';
-  @apply absolute inset-0;
-  background: radial-gradient(circle at center, 
-    rgba(250, 240, 214, 0.1) 0%,
-    rgba(250, 240, 214, 0.05) 25%,
-    rgba(250, 240, 214, 0) 70%
-  );
+/* Loading Bubbles Animation */
+.loading-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.loading-bubble {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(242, 169, 0, 0.2);
+  animation: float 3s infinite ease-in-out;
+}
+
+.loading-bubble:nth-child(1) {
+  animation-delay: 0s;
+  left: 0;
+}
+
+.loading-bubble:nth-child(2) {
+  animation-delay: 0.5s;
+  left: 40px;
+}
+
+.loading-bubble:nth-child(3) {
+  animation-delay: 1s;
+  left: 80px;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateY(-20px);
+    opacity: 0.8;
+  }
 }

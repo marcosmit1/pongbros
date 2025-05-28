@@ -98,7 +98,7 @@ export default function BarsPage() {
           {bars.map((bar) => (
             <div
               key={bar.id}
-              className="card hover:scale-[1.02]"
+              className="card flex flex-col"
             >
               <div className="relative h-48 w-full mb-4 rounded-lg overflow-hidden">
                 {bar.imageURL ? (
@@ -114,17 +114,17 @@ export default function BarsPage() {
                 )}
               </div>
               
-              <div className="space-y-3">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
+              <div className="flex flex-col flex-grow space-y-4">
+                <div className="flex justify-between items-start gap-2">
+                  <h3 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] truncate">
                     {bar.name}
                   </h3>
-                  <span className={`status-badge ${bar.status === 'active' ? 'live' : 'completed'}`}>
+                  <span className={`status-badge ${bar.status === 'active' ? 'live' : 'error'} whitespace-nowrap`}>
                     {bar.status === 'active' ? 'Active' : 'Inactive'}
                   </span>
                 </div>
                 
-                <p className="text-[var(--font-size-subheadline)] opacity-80">
+                <p className="text-[var(--font-size-subheadline)] opacity-80 line-clamp-2">
                   {bar.address}
                 </p>
                 
@@ -134,12 +134,14 @@ export default function BarsPage() {
                   </p>
                 )}
 
-                <Link
-                  href={`/dashboard/${bar.id}`}
-                  className="secondary-button w-full text-center mt-4"
-                >
-                  View Dashboard
-                </Link>
+                <div className="mt-auto pt-4">
+                  <Link
+                    href={`/dashboard/${bar.id}`}
+                    className="secondary-button w-full text-center block"
+                  >
+                    View Dashboard
+                  </Link>
+                </div>
               </div>
             </div>
           ))}

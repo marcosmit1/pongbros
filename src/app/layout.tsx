@@ -6,8 +6,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PongBros - Bar Management Portal",
-  description: "Manage your beer pong tables and bookings with PongBros",
+  title: "Pong Bros - Bar Management Portal",
+  description: "Manage your beer pong tables and bookings with Pong Bros",
 };
 
 export default function RootLayout({

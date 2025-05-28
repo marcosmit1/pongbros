@@ -12,18 +12,18 @@ export default function HomePage() {
       {/* Navigation */}
       <nav className="glass-effect fixed top-0 w-full z-50 px-4 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 group">
             <Image
-              src="/logo.png"
+              src="/images/pong-bros-logo.png"
               alt="PongBros Logo"
               width={40}
               height={40}
-              className="rounded-full"
+              className="rounded-full logo-glow group-hover:scale-105 transition-transform duration-300"
             />
-            <span className="text-[var(--font-size-headline)] font-[var(--font-weight-bold)] foam-text">
+            <span className="text-[var(--font-size-headline)] font-[var(--font-weight-bold)] foam-text group-hover:opacity-80 transition-opacity duration-300">
               PongBros
             </span>
-          </div>
+          </Link>
           <div className="flex space-x-4">
             <Link href="/login" className="secondary-button">
               Bar Login
