@@ -50,17 +50,33 @@ export default function Dashboard() {
 
     const fetchData = async () => {
       try {
+        setLoading(true);
+        setError('');
+
         // Fetch venue data
         const venueDoc = await getDoc(doc(db, 'venues', user.uid));
-        if (venueDoc.exists()) {
-          setVenueData(venueDoc.data() as VenueData);
+        if (!venueDoc.exists()) {
+          setError('Venue not found. Please contact support.');
+          return;
         }
-
-        // Fetch bookings
-        const bookingsRef = collection(db, 'bookings');
-        const q = query(bookingsRef, where('barId', '==', user.uid));
-        const querySnapshot = await getDocs(q);
         
+        setVenueData(venueDoc.data() as VenueData);
+
+        // Fetch today's bookings
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const bookingsRef = collection(db, 'bookings');
+        const q = query(
+          bookingsRef,
+          where('venueId', '==', user.uid),
+          where('date', '>=', today),
+          where('date', '<', tomorrow)
+        );
+        
+        const querySnapshot = await getDocs(q);
         const fetchedBookings = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
@@ -70,7 +86,7 @@ export default function Dashboard() {
         setBookings(fetchedBookings);
       } catch (error) {
         console.error('Error fetching data:', error);
-        setError('Failed to load venue data');
+        setError('Failed to load venue data. Please try refreshing the page.');
       } finally {
         setLoading(false);
       }

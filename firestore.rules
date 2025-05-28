@@ -7,15 +7,12 @@ service cloud.firestore {
       // Allow read access to all authenticated users (for the mobile app)
       allow read: if request.auth != null;
       
-      // Allow creation and updates if all required fields are present
-      allow create, update: if request.auth != null &&
+      // Allow venues to update their own data
+      allow update: if request.auth != null && 
+                   request.auth.uid == venueId &&
                    request.resource.data.keys().hasAll([
                      'name', 'address', 'description', 'capacity',
                      'pricePerHour', 'openingHours', 'location'
-                   ]) &&
-                   request.resource.data.openingHours.keys().hasAll([
-                     'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-                     'Friday', 'Saturday', 'Sunday'
                    ]);
     }
     
