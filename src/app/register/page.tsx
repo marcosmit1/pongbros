@@ -106,7 +106,7 @@ export default function Register() {
           Sunday: { opens: '10:00', closes: '22:00' },
         },
         ownerId: userCredential.user.uid,
-        status: 'active',
+        status: 'inactive',
         createdAt: new Date(),
         updatedAt: new Date()
       });

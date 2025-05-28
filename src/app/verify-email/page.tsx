@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { sendEmailVerification } from 'firebase/auth';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -15,6 +17,28 @@ export default function VerifyEmail() {
   const { user } = useAuth();
   const router = useRouter();
 
+  const activateBar = async () => {
+    if (!user) return;
+    
+    try {
+      // Find the user's bar
+      const venuesRef = collection(db, 'venues');
+      const q = query(venuesRef, where('ownerId', '==', user.uid));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const venueDoc = querySnapshot.docs[0];
+        // Update the bar status to active
+        await updateDoc(doc(db, 'venues', venueDoc.id), {
+          status: 'active',
+          updatedAt: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Error activating bar:', error);
+    }
+  };
+
   useEffect(() => {
     if (!user) {
       router.push('/login');
@@ -22,7 +46,9 @@ export default function VerifyEmail() {
     }
 
     if (user.emailVerified) {
-      router.push('/bars/add');
+      activateBar().then(() => {
+        router.push('/bars/add');
+      });
       return;
     }
 
@@ -31,6 +57,7 @@ export default function VerifyEmail() {
       if (user) {
         await user.reload();
         if (user.emailVerified) {
+          await activateBar();
           router.push('/bars/add');
         }
       }
