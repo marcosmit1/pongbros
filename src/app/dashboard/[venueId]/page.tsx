@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -88,24 +88,7 @@ function VenueDashboardContent() {
     }
   };
 
-  const handleStatusToggle = async () => {
-    if (!venueData) return;
-    try {
-      const newStatus = venueData.status === 'active' ? 'inactive' : 'active';
-      await updateDoc(doc(db, 'venues', venueId), {
-        status: newStatus,
-        updatedAt: new Date()
-      });
-      setVenueData({ ...venueData, status: newStatus });
-      setSuccess(`Venue status updated to ${newStatus}`);
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error) {
-      console.error('Error updating venue status:', error);
-      setError('Failed to update venue status. Please try again.');
-    }
-  };
-
-  const fetchBookings = async (date: string) => {
+  const fetchBookings = useCallback(async (date: string) => {
     try {
       const selectedDateObj = new Date(date);
       selectedDateObj.setHours(0, 0, 0, 0);
@@ -134,7 +117,7 @@ function VenueDashboardContent() {
       console.error('Error fetching bookings:', error);
       setError('Failed to load bookings. Please try refreshing the page.');
     }
-  };
+  }, [venueId, setError]);
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,7 +194,7 @@ function VenueDashboardContent() {
     if (venueId) {
       fetchData();
     }
-  }, [user, router, venueId, selectedDate]);
+  }, [user, router, venueId, selectedDate, fetchBookings]);
 
   if (loading) {
     return <LoadingFallback />;

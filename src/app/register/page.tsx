@@ -139,18 +139,7 @@ export default function Register() {
   return (
     <div className="min-h-screen flex flex-col justify-center relative overflow-hidden">
       {/* Background with bubble effect */}
-      <div className="bubble-bg">
-        <div className="loading-container absolute top-1/4 left-1/4">
-          <div className="loading-bubble"></div>
-          <div className="loading-bubble"></div>
-          <div className="loading-bubble"></div>
-        </div>
-        <div className="loading-container absolute top-2/3 right-1/3">
-          <div className="loading-bubble"></div>
-          <div className="loading-bubble"></div>
-          <div className="loading-bubble"></div>
-        </div>
-      </div>
+      <div className="bubble-bg" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
         <div className="text-center mb-8">
@@ -161,6 +150,7 @@ export default function Register() {
               width={120}
               height={120}
               className="mx-auto logo-glow hover:scale-105 transition-transform duration-300"
+              priority
             />
           </Link>
           <h2 className="mt-6 text-[var(--font-size-title)] font-[var(--font-weight-bold)] foam-text">
