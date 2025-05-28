@@ -6,7 +6,6 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useRouter, useParams } from 'next/navigation';
 import { GeoPoint } from 'firebase/firestore';
-import Image from 'next/image';
 
 interface Booking {
   id: string;
@@ -204,7 +203,7 @@ function VenueDashboardContent() {
           {/* Today's Stats */}
           <div className="card">
             <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] mb-4">
-              Today's Stats
+              Today&apos;s Stats
             </h2>
             <div className="space-y-4">
               <div>
@@ -225,7 +224,7 @@ function VenueDashboardContent() {
           {/* Bookings */}
           <div className="card">
             <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] mb-4">
-              Today's Bookings
+              Today&apos;s Bookings
             </h2>
             <div className="space-y-4">
               {bookings.length > 0 ? (
