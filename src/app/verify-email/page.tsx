@@ -64,7 +64,7 @@ export default function VerifyEmail() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [user, router]);
+  }, [user, router, activateBar]);
 
   useEffect(() => {
     if (countdown > 0 && loading) {

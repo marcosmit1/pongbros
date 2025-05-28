@@ -15,6 +15,7 @@ interface Bar {
   imageURL: string;
   status: 'active' | 'inactive';
   lastBooking?: string;
+  updatedAt?: Date;
 }
 
 export default function BarsPage() {
@@ -43,7 +44,7 @@ export default function BarsPage() {
 
         // Update any bars without a status or ID
         for (const bar of fetchedBars) {
-          const updates: any = {};
+          const updates: Partial<Bar> = {};
           
           if (!bar.status) {
             updates.status = 'active';
