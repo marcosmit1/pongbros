@@ -30,11 +30,10 @@ interface VenueData {
   imageURL: string;
   location: GeoPoint;
   ownerId: string;
+  status: 'active' | 'inactive';
   openingHours: {
     [key: string]: { opens: string; closes: string };
   };
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 function LoadingFallback() {
@@ -49,11 +48,17 @@ function LoadingFallback() {
   );
 }
 
+function formatDate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
 function VenueDashboardContent() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [venueData, setVenueData] = useState<VenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
   const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
@@ -78,6 +83,54 @@ function VenueDashboardContent() {
     } catch (error) {
       console.error(`Error ${action}ing booking:`, error);
       setError(`Failed to ${action} booking. Please try again.`);
+    }
+  };
+
+  const handleStatusToggle = async () => {
+    if (!venueData) return;
+    try {
+      const newStatus = venueData.status === 'active' ? 'inactive' : 'active';
+      await updateDoc(doc(db, 'venues', venueId), {
+        status: newStatus,
+        updatedAt: new Date()
+      });
+      setVenueData({ ...venueData, status: newStatus });
+      setSuccess(`Venue status updated to ${newStatus}`);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error) {
+      console.error('Error updating venue status:', error);
+      setError('Failed to update venue status. Please try again.');
+    }
+  };
+
+  const fetchBookings = async (date: string) => {
+    try {
+      const selectedDateObj = new Date(date);
+      selectedDateObj.setHours(0, 0, 0, 0);
+      const nextDay = new Date(selectedDateObj);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      const bookingsRef = collection(db, 'bookings');
+      const q = query(
+        bookingsRef,
+        where('venueId', '==', venueId),
+        where('date', '>=', selectedDateObj),
+        where('date', '<', nextDay)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const fetchedBookings = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        date: doc.data().date.toDate(),
+        createdAt: doc.data().createdAt?.toDate(),
+        updatedAt: doc.data().updatedAt?.toDate()
+      })) as Booking[];
+
+      setBookings(fetchedBookings);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      setError('Failed to load bookings. Please try refreshing the page.');
     }
   };
 
@@ -114,31 +167,7 @@ function VenueDashboardContent() {
         }
         
         setVenueData(venueData);
-
-        // Fetch today's bookings
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        const bookingsRef = collection(db, 'bookings');
-        const q = query(
-          bookingsRef,
-          where('venueId', '==', venueId),
-          where('date', '>=', today),
-          where('date', '<', tomorrow)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        const fetchedBookings = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          date: doc.data().date.toDate(),
-          createdAt: doc.data().createdAt?.toDate(),
-          updatedAt: doc.data().updatedAt?.toDate()
-        })) as Booking[];
-
-        setBookings(fetchedBookings);
+        await fetchBookings(selectedDate);
       } catch (error) {
         console.error('Error fetching data:', error);
         setError('Failed to load venue data. Please try refreshing the page.');
@@ -150,7 +179,7 @@ function VenueDashboardContent() {
     if (venueId) {
       fetchData();
     }
-  }, [user, router, venueId]);
+  }, [user, router, venueId, selectedDate]);
 
   if (loading) {
     return <LoadingFallback />;
@@ -199,11 +228,22 @@ function VenueDashboardContent() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {success && (
+          <div className="status-badge live mb-4">
+            {success}
+          </div>
+        )}
+        {error && (
+          <div className="status-badge error mb-4">
+            {error}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Today's Stats */}
           <div className="card">
             <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] mb-4">
-              Today&apos;s Stats
+              Bookings Stats
             </h2>
             <div className="space-y-4">
               <div>
@@ -223,9 +263,17 @@ function VenueDashboardContent() {
 
           {/* Bookings */}
           <div className="card">
-            <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] mb-4">
-              Today&apos;s Bookings
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
+                Bookings
+              </h2>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="text-input py-1 px-2"
+              />
+            </div>
             <div className="space-y-4">
               {bookings.length > 0 ? (
                 bookings.map(booking => (
@@ -272,7 +320,7 @@ function VenueDashboardContent() {
                 ))
               ) : (
                 <div className="text-center p-6 glass-effect rounded-lg">
-                  <p className="text-[var(--font-size-body)] opacity-60">No bookings for today</p>
+                  <p className="text-[var(--font-size-body)] opacity-60">No bookings for this date</p>
                 </div>
               )}
             </div>
@@ -280,9 +328,17 @@ function VenueDashboardContent() {
 
           {/* Venue Info */}
           <div className="card">
-            <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] mb-4">
-              Venue Information
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
+                Venue Information
+              </h2>
+              <button
+                onClick={handleStatusToggle}
+                className={`status-badge ${venueData?.status === 'active' ? 'live' : 'error'} cursor-pointer`}
+              >
+                {venueData?.status === 'active' ? 'Active' : 'Inactive'}
+              </button>
+            </div>
             <div className="space-y-4">
               <div>
                 <p className="text-[var(--font-size-subheadline)] opacity-80">Address</p>

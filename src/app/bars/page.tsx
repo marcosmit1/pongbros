@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -40,6 +40,17 @@ export default function BarsPage() {
           id: doc.id,
           ...doc.data(),
         })) as Bar[];
+
+        // Update any bars without a status to be active
+        for (const bar of fetchedBars) {
+          if (!bar.status) {
+            await updateDoc(doc(db, 'venues', bar.id), {
+              status: 'active',
+              updatedAt: new Date()
+            });
+            bar.status = 'active';
+          }
+        }
 
         setBars(fetchedBars);
       } catch (error) {
