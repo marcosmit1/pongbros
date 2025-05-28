@@ -7,6 +7,8 @@ import { db, storage } from '@/lib/firebase';
 import { doc, setDoc, collection } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { GeoPoint } from 'firebase/firestore';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export default function AddBarPage() {
   const [formData, setFormData] = useState({
@@ -80,12 +82,13 @@ export default function AddBarPage() {
           Saturday: { opens: '10:00', closes: '23:00' },
           Sunday: { opens: '10:00', closes: '22:00' },
         },
+        status: 'active',
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
       await setDoc(doc(db, 'venues', venueId), venueData);
-      router.push('/bars');
+      router.push('/dashboard');
     } catch (error) {
       console.error('Error adding bar:', error);
       setError('Failed to add bar. Please try again.');
@@ -95,120 +98,161 @@ export default function AddBarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12">
-      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="max-w-3xl mx-auto">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8">Add New Bar</h1>
+    <div className="min-h-screen flex flex-col justify-center relative overflow-hidden">
+      {/* Background with bubble effect */}
+      <div className="bubble-bg" />
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white shadow rounded-lg p-6">
-              {error && (
-                <div className="bg-red-50 border border-red-500 text-red-700 px-4 py-3 rounded">
-                  {error}
-                </div>
-              )}
+      <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-block">
+            <Image
+              src="/images/pong-bros-logo.png"
+              alt="Pong Bros Logo"
+              width={120}
+              height={120}
+              className="mx-auto logo-glow hover:scale-105 transition-transform duration-300"
+              priority
+            />
+          </Link>
+          <h2 className="mt-6 text-[var(--font-size-title)] font-[var(--font-weight-bold)] foam-text">
+            Add Your Bar
+          </h2>
+          <p className="mt-2 text-[var(--font-size-subheadline)] text-beer-foam opacity-80">
+            Join the Pong Bros network
+          </p>
+        </div>
+      </div>
 
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Bar Name
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10">
+        <div className="card mx-4 sm:mx-0">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="status-badge error">
+                {error}
               </div>
+            )}
 
-              <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                  Address
-                </label>
-                <input
-                  id="address"
-                  name="address"
-                  type="text"
-                  required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                />
-              </div>
+            <div>
+              <label htmlFor="name" className="form-label">
+                Bar Name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                className="text-input"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter your bar's name"
+              />
+            </div>
 
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  required
-                  rows={3}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
+            <div>
+              <label htmlFor="address" className="form-label">
+                Address
+              </label>
+              <input
+                id="address"
+                name="address"
+                type="text"
+                required
+                className="text-input"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="Enter your bar's address"
+              />
+            </div>
 
-              <div>
-                <label htmlFor="capacity" className="block text-sm font-medium text-gray-700">
-                  Beer Pong Table Capacity
-                </label>
-                <input
-                  id="capacity"
-                  name="capacity"
-                  type="number"
-                  required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-                  value={formData.capacity}
-                  onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                />
-              </div>
+            <div>
+              <label htmlFor="description" className="form-label">
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                required
+                rows={3}
+                className="text-input"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe your bar"
+              />
+            </div>
 
-              <div>
-                <label htmlFor="pricePerHour" className="block text-sm font-medium text-gray-700">
-                  Price per 30 min (R)
-                </label>
-                <input
-                  id="pricePerHour"
-                  name="pricePerHour"
-                  type="number"
-                  required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
-                  value={formData.pricePerHour}
-                  onChange={(e) => setFormData({ ...formData, pricePerHour: e.target.value })}
-                />
-              </div>
+            <div>
+              <label htmlFor="capacity" className="form-label">
+                Beer Pong Table Capacity
+              </label>
+              <input
+                id="capacity"
+                name="capacity"
+                type="number"
+                required
+                className="text-input"
+                value={formData.capacity}
+                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                placeholder="Number of tables"
+              />
+            </div>
 
-              <div>
-                <label htmlFor="image" className="block text-sm font-medium text-gray-700">
-                  Bar Image
-                </label>
-                <input
-                  id="image"
-                  name="image"
-                  type="file"
-                  accept="image/*"
-                  required
-                  className="mt-1 block w-full py-2 px-3"
-                  onChange={handleImageChange}
-                />
-              </div>
+            <div>
+              <label htmlFor="pricePerHour" className="form-label">
+                Price per 30 min (R)
+              </label>
+              <input
+                id="pricePerHour"
+                name="pricePerHour"
+                type="number"
+                required
+                className="text-input"
+                value={formData.pricePerHour}
+                onChange={(e) => setFormData({ ...formData, pricePerHour: e.target.value })}
+                placeholder="Price in ZAR"
+              />
+            </div>
 
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md"
-                >
-                  {loading ? 'Adding Bar...' : 'Add Bar'}
-                </button>
-              </div>
-            </form>
-          </div>
+            <div>
+              <label htmlFor="imageFile" className="form-label">
+                Bar Image
+              </label>
+              <input
+                id="imageFile"
+                name="imageFile"
+                type="file"
+                accept="image/*"
+                required
+                className="text-input file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
+                         file:text-sm file:font-semibold file:bg-primary file:text-beer-dark-brown
+                         hover:file:bg-opacity-80"
+                onChange={handleImageChange}
+              />
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="primary-button w-full flex justify-center items-center min-h-[48px]"
+              >
+                {loading ? (
+                  <div className="loading-container scale-75">
+                    <div className="loading-bubble"></div>
+                    <div className="loading-bubble"></div>
+                    <div className="loading-bubble"></div>
+                  </div>
+                ) : (
+                  'Add Bar'
+                )}
+              </button>
+            </div>
+
+            <div className="text-center mt-4">
+              <Link href="/dashboard" className="text-link">
+                Back to Dashboard
+              </Link>
+            </div>
+          </form>
         </div>
       </div>
     </div>
