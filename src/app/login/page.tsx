@@ -72,7 +72,11 @@ export default function Login() {
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('Failed to sign in. Please check your credentials.');
+      setError(
+        error instanceof Error && error.message.includes('verify your email')
+          ? error.message
+          : 'Failed to sign in. Please check your credentials.'
+      );
     }
 
     setLoading(false);
