@@ -45,7 +45,7 @@ export default function Home() {
                   transition={{ duration: 0.8 }}
                   className="text-center text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl"
                 >
-                  <span className="block text-white">Welcome to PongBros</span>
+                  <span className="block text-white">Welcome to Pong Bros</span>
                   <span className="block text-indigo-200">Bar Management Portal</span>
                 </motion.h1>
                 <motion.p
