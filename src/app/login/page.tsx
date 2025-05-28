@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { db, auth } from '@/lib/firebase';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
 
 export default function Login() {
@@ -20,10 +22,25 @@ export default function Login() {
 
     try {
       await signIn(email, password);
-      router.push('/dashboard');
+      
+      // After successful sign in, check if user has any bars
+      const venuesRef = collection(db, 'venues');
+      const q = query(venuesRef, where('ownerId', '==', auth.currentUser!.uid));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        // No bars found, redirect to add bar page
+        router.push('/bars/add');
+      } else if (querySnapshot.size === 1) {
+        // One bar found, redirect to its dashboard
+        router.push(`/dashboard/${querySnapshot.docs[0].id}`);
+      } else {
+        // Multiple bars found, redirect to bars management page
+        router.push('/bars');
+      }
     } catch (error) {
+      console.error('Login error:', error);
       setError('Failed to sign in. Please check your credentials.');
-      console.error(error);
     }
 
     setLoading(false);
@@ -33,12 +50,12 @@ export default function Login() {
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your bar account
+          Sign in to your account
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Or{' '}
           <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-            register your bar
+            create a new account
           </Link>
         </p>
       </div>
