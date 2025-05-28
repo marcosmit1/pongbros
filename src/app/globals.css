@@ -62,138 +62,144 @@
 }
 
 /* Base Styles */
-body {
-  background-color: var(--background);
-  color: var(--beer-foam);
-  font-family: "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--beer-foam);
+    font-family: "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
 }
 
 /* Component Classes */
-.primary-button {
-  @apply px-6 py-3 rounded-xl font-semibold min-h-[44px] transition-all duration-200;
-  background: var(--beer-red-cup);
-  color: var(--beer-foam);
-}
+@layer components {
+  .primary-button {
+    @apply rounded-xl font-semibold min-h-[44px] transition-all duration-200 p-3;
+    background: var(--beer-red-cup);
+    color: var(--beer-foam);
+  }
 
-.primary-button:hover {
-  transform: scale(1.05);
-  opacity: 0.9;
-}
+  .primary-button:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
 
-.secondary-button {
-  @apply px-6 py-3 rounded-xl font-semibold min-h-[44px] transition-all duration-200;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--beer-foam);
-}
+  .secondary-button {
+    @apply rounded-xl font-semibold min-h-[44px] transition-all duration-200 p-3;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--beer-foam);
+  }
 
-.secondary-button:hover {
-  transform: scale(1.05);
-  background: rgba(255, 255, 255, 0.15);
-}
+  .secondary-button:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.15);
+  }
 
-.text-input {
-  @apply px-4 py-3 rounded-xl min-h-[44px] w-full transition-all duration-200;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--beer-foam);
-}
+  .text-input {
+    @apply rounded-xl min-h-[44px] w-full transition-all duration-200 p-3;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--beer-foam);
+  }
 
-.text-input:focus {
-  border-color: var(--beer-foam);
-  outline: none;
-  background: rgba(255, 255, 255, 0.15);
-}
+  .text-input:focus {
+    border-color: var(--beer-foam);
+    outline: none;
+    background: rgba(255, 255, 255, 0.15);
+  }
 
-.card {
-  @apply p-4 rounded-[20px] transition-all duration-200;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-}
+  .card {
+    @apply p-4 rounded-[20px] transition-all duration-200;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+  }
 
-.card:hover {
-  transform: translateY(-2px);
-}
+  .card:hover {
+    transform: translateY(-2px);
+  }
 
-.status-badge {
-  @apply px-2 py-1 rounded-xl text-xs font-bold inline-flex items-center;
-}
+  .status-badge {
+    @apply p-1 rounded-xl text-xs font-bold inline-flex items-center;
+  }
 
-.status-badge.upcoming {
-  color: var(--beer-amber);
-  background: rgba(240, 150, 51, 0.2);
-  border: 1px solid rgba(240, 150, 51, 0.3);
-}
+  .status-badge.upcoming {
+    color: var(--beer-amber);
+    background: rgba(240, 150, 51, 0.2);
+    border: 1px solid rgba(240, 150, 51, 0.3);
+  }
 
-.status-badge.live {
-  color: var(--beer-red-cup);
-  background: rgba(255, 0, 0, 0.2);
-  border: 1px solid rgba(255, 0, 0, 0.3);
-}
+  .status-badge.live {
+    color: var(--beer-red-cup);
+    background: rgba(255, 0, 0, 0.2);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+  }
 
-.status-badge.completed {
-  color: var(--beer-foam);
-  background: rgba(250, 240, 214, 0.2);
-  border: 1px solid rgba(250, 240, 214, 0.3);
-}
+  .status-badge.completed {
+    color: var(--beer-foam);
+    background: rgba(250, 240, 214, 0.2);
+    border: 1px solid rgba(250, 240, 214, 0.3);
+  }
 
-.glass-effect {
-  @apply backdrop-blur-md;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
+  .glass-effect {
+    @apply backdrop-blur-md;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
 
-.foam-text {
-  background: linear-gradient(to bottom, var(--beer-foam), rgba(250, 240, 214, 0.7));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  .foam-text {
+    background: linear-gradient(to bottom, var(--beer-foam), rgba(250, 240, 214, 0.7));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 /* Loading Animation */
-@keyframes bubble {
-  0% {
-    transform: translateY(100%) scale(0);
-    opacity: 0;
+@layer utilities {
+  @keyframes bubble {
+    0% {
+      transform: translateY(100%) scale(0);
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100%) scale(1);
+      opacity: 0;
+    }
   }
-  50% {
-    opacity: 1;
+
+  .loading-bubble {
+    @apply absolute rounded-full;
+    background: rgba(250, 240, 214, 0.2);
+    animation: bubble 2s infinite ease-in-out;
   }
-  100% {
-    transform: translateY(-100%) scale(1);
-    opacity: 0;
+
+  .loading-container {
+    @apply relative h-12 w-12;
   }
-}
 
-.loading-bubble {
-  @apply absolute rounded-full;
-  background: rgba(250, 240, 214, 0.2);
-  animation: bubble 2s infinite ease-in-out;
-}
+  .loading-container .loading-bubble:nth-child(1) {
+    left: 20%;
+    width: 8px;
+    height: 8px;
+    animation-delay: 0s;
+  }
 
-.loading-container {
-  @apply relative h-12 w-12;
-}
+  .loading-container .loading-bubble:nth-child(2) {
+    left: 40%;
+    width: 10px;
+    height: 10px;
+    animation-delay: 0.2s;
+  }
 
-.loading-container .loading-bubble:nth-child(1) {
-  left: 20%;
-  width: 8px;
-  height: 8px;
-  animation-delay: 0s;
-}
-
-.loading-container .loading-bubble:nth-child(2) {
-  left: 40%;
-  width: 10px;
-  height: 10px;
-  animation-delay: 0.2s;
-}
-
-.loading-container .loading-bubble:nth-child(3) {
-  left: 60%;
-  width: 7px;
-  height: 7px;
-  animation-delay: 0.4s;
+  .loading-container .loading-bubble:nth-child(3) {
+    left: 60%;
+    width: 7px;
+    height: 7px;
+    animation-delay: 0.4s;
+  }
 }
 
 /* Responsive Typography */
