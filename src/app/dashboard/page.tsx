@@ -89,7 +89,7 @@ export default function Dashboard() {
     if (!venueData || !user) return;
 
     try {
-      let updatedData = { ...venueData };
+      const updatedData = { ...venueData };
 
       if (imageFile) {
         // Upload new image
