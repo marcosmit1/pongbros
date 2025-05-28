@@ -6,7 +6,7 @@ import { db, auth, storage } from '@/lib/firebase';
 import { doc, setDoc, deleteDoc, collection, addDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { GeoPoint } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -54,6 +54,9 @@ export default function Register() {
         formData.email,
         formData.password
       );
+
+      // Send verification email
+      await sendEmailVerification(userCredential.user);
 
       // Create user document
       const userData: UserData = {
@@ -113,7 +116,7 @@ export default function Register() {
         id: venueRef.id
       });
 
-      router.push('/dashboard');
+      router.push('/verify-email');
     } catch (error: unknown) {
       console.error('Registration error:', error);
       if (error instanceof FirebaseError) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, storage } from '@/lib/firebase';
@@ -9,6 +9,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { GeoPoint } from 'firebase/firestore';
 import Link from 'next/link';
 import Image from 'next/image';
+import { sendEmailVerification } from 'firebase/auth';
 
 export default function AddBarPage() {
   const [formData, setFormData] = useState({
@@ -27,6 +28,17 @@ export default function AddBarPage() {
   const { user } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!user.emailVerified) {
+      router.push('/verify-email');
+    }
+  }, [user, router]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFormData({ ...formData, imageFile: e.target.files[0] });
@@ -37,6 +49,13 @@ export default function AddBarPage() {
     e.preventDefault();
     if (!user) {
       router.push('/login');
+      return;
+    }
+
+    if (!user.emailVerified) {
+      setError('Please verify your email address before adding a bar.');
+      await sendEmailVerification(user);
+      router.push('/verify-email');
       return;
     }
 
