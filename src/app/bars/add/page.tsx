@@ -82,6 +82,7 @@ export default function AddBarPage() {
 
       // Create venue document
       const venueData = {
+        id: venueId,
         name: formData.name,
         address: formData.address,
         description: formData.description,
@@ -105,7 +106,7 @@ export default function AddBarPage() {
       };
 
       await setDoc(doc(db, 'venues', venueId), venueData);
-      router.push('/dashboard');
+      router.push(`/dashboard/${venueId}`);
     } catch (error) {
       console.error('Error adding bar:', error);
       setError('Failed to add bar. Please try again.');

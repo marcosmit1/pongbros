@@ -41,14 +41,22 @@ export default function BarsPage() {
           ...doc.data(),
         })) as Bar[];
 
-        // Update any bars without a status to be active
+        // Update any bars without a status or ID
         for (const bar of fetchedBars) {
+          const updates: any = {};
+          
           if (!bar.status) {
-            await updateDoc(doc(db, 'venues', bar.id), {
-              status: 'active',
-              updatedAt: new Date()
-            });
-            bar.status = 'active';
+            updates.status = 'active';
+          }
+          
+          if (!bar.id) {
+            updates.id = bar.id;
+          }
+          
+          if (Object.keys(updates).length > 0) {
+            updates.updatedAt = new Date();
+            await updateDoc(doc(db, 'venues', bar.id), updates);
+            Object.assign(bar, updates);
           }
         }
 

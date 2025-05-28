@@ -108,12 +108,18 @@ export default function Register() {
         updatedAt: new Date()
       };
 
-      const venueRef = await addDoc(collection(db, 'venues'), venueData);
+      // Generate a new ID for the venue
+      const venueRef = doc(collection(db, 'venues'));
+      const venueId = venueRef.id;
 
-      // Update the document with its own ID
-      await updateDoc(doc(db, 'venues', venueRef.id), {
-        id: venueRef.id
-      });
+      // Add the ID to the venue data
+      const venueDataWithId = {
+        ...venueData,
+        id: venueId
+      };
+
+      // Create the venue document with the ID
+      await setDoc(venueRef, venueDataWithId);
 
       router.push('/verify-email');
     } catch (error: unknown) {
