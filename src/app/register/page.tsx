@@ -3,11 +3,18 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { db, auth, storage } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { GeoPoint } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
+
+interface UserData {
+  email: string;
+  role: 'venue';
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -46,6 +53,16 @@ export default function Register() {
         formData.password
       );
 
+      // Create user document
+      const userData: UserData = {
+        email: formData.email,
+        role: 'venue',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      await setDoc(doc(db, 'users', userCredential.user.uid), userData);
+
       let imageURL = '';
       if (formData.imageFile) {
         try {
@@ -55,7 +72,8 @@ export default function Register() {
           imageURL = await getDownloadURL(imageRef);
         } catch (uploadError) {
           console.error('Image upload error:', uploadError);
-          // Delete the created user account if image upload fails
+          // Delete the created user account and document if image upload fails
+          await deleteDoc(doc(db, 'users', userCredential.user.uid));
           await userCredential.user.delete();
           throw new Error('Failed to upload venue image. Please try again.');
         }
@@ -91,7 +109,8 @@ export default function Register() {
         router.push('/dashboard');
       } catch (docError) {
         console.error('Document creation error:', docError);
-        // Delete the created user account if document creation fails
+        // Delete the created user account, user document, and uploaded image if venue creation fails
+        await deleteDoc(doc(db, 'users', userCredential.user.uid));
         await userCredential.user.delete();
         throw new Error('Failed to create venue profile. Please try again.');
       }
