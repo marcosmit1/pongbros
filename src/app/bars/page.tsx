@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Bar {
   id: string;
@@ -86,10 +87,12 @@ export default function BarsPage() {
               >
                 {bar.imageURL && (
                   <div className="h-48 w-full relative">
-                    <img
+                    <Image
                       src={bar.imageURL}
                       alt={bar.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
                 )}
