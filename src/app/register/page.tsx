@@ -48,10 +48,17 @@ export default function Register() {
 
       let imageURL = '';
       if (formData.imageFile) {
-        // Upload image to Firebase Storage
-        const imageRef = ref(storage, `bar_images/${formData.imageFile.name}`);
-        await uploadBytes(imageRef, formData.imageFile);
-        imageURL = await getDownloadURL(imageRef);
+        try {
+          // Upload image to Firebase Storage
+          const imageRef = ref(storage, `bar_images/${Date.now()}_${formData.imageFile.name}`);
+          await uploadBytes(imageRef, formData.imageFile);
+          imageURL = await getDownloadURL(imageRef);
+        } catch (uploadError) {
+          console.error('Image upload error:', uploadError);
+          // Delete the created user account if image upload fails
+          await userCredential.user.delete();
+          throw new Error('Failed to upload venue image. Please try again.');
+        }
       }
 
       // Create venue document
@@ -79,8 +86,15 @@ export default function Register() {
         updatedAt: new Date()
       };
 
-      await setDoc(doc(db, 'venues', userCredential.user.uid), venueData);
-      router.push('/dashboard');
+      try {
+        await setDoc(doc(db, 'venues', userCredential.user.uid), venueData);
+        router.push('/dashboard');
+      } catch (docError) {
+        console.error('Document creation error:', docError);
+        // Delete the created user account if document creation fails
+        await userCredential.user.delete();
+        throw new Error('Failed to create venue profile. Please try again.');
+      }
     } catch (error: unknown) {
       console.error('Registration error:', error);
       if (error instanceof FirebaseError) {
@@ -89,8 +103,12 @@ export default function Register() {
             ? 'This email is already registered. Please try logging in instead.'
             : error.code === 'auth/weak-password'
             ? 'Password should be at least 6 characters long.'
+            : error.code === 'storage/unauthorized'
+            ? 'Failed to upload image. Please try again.'
             : 'Failed to create account. Please try again.'
         );
+      } else if (error instanceof Error) {
+        setError(error.message);
       } else {
         setError('An unexpected error occurred. Please try again.');
       }
