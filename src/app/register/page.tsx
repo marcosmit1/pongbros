@@ -10,6 +10,7 @@ import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/
 import { FirebaseError } from 'firebase/app';
 import Link from 'next/link';
 import Image from 'next/image';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 interface UserData {
   email: string;
@@ -20,17 +21,16 @@ interface UserData {
 
 export default function Register() {
   const [formData, setFormData] = useState({
+    email: '',
+    password: '',
     name: '',
     address: '',
     description: '',
     capacity: '',
     pricePerHour: '',
     imageFile: null as File | null,
-    email: '',
-    password: '',
-    // Default location (can be updated later)
-    latitude: '-33.908084',
-    longitude: '18.409139'
+    latitude: -33.908084,
+    longitude: 18.409139
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -85,17 +85,15 @@ export default function Register() {
       }
 
       // Create venue document
-      const venueRef = await addDoc(collection(db, 'venues'), {
+      const venueData = {
         name: formData.name,
         address: formData.address,
         description: formData.description,
         capacity: Number(formData.capacity),
         pricePerHour: Number(formData.pricePerHour),
         imageURL: imageURL,
-        location: new GeoPoint(
-          Number(formData.latitude),
-          Number(formData.longitude)
-        ),
+        ownerId: userCredential.user.uid,
+        location: new GeoPoint(formData.latitude, formData.longitude),
         openingHours: {
           Monday: { opens: '09:00', closes: '22:00' },
           Tuesday: { opens: '09:00', closes: '22:00' },
@@ -105,11 +103,12 @@ export default function Register() {
           Saturday: { opens: '10:00', closes: '23:00' },
           Sunday: { opens: '10:00', closes: '22:00' },
         },
-        ownerId: userCredential.user.uid,
         status: 'inactive',
         createdAt: new Date(),
         updatedAt: new Date()
-      });
+      };
+
+      const venueRef = await addDoc(collection(db, 'venues'), venueData);
 
       // Update the document with its own ID
       await updateDoc(doc(db, 'venues', venueRef.id), {
@@ -231,15 +230,17 @@ export default function Register() {
               <label htmlFor="address" className="form-label">
                 Address
               </label>
-              <input
-                id="address"
-                name="address"
-                type="text"
-                required
+              <AddressAutocomplete
+                onSelect={(address, latitude, longitude) => {
+                  setFormData({
+                    ...formData,
+                    address,
+                    latitude,
+                    longitude
+                  });
+                }}
+                defaultValue={formData.address}
                 className="text-input"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Enter your bar's address"
               />
             </div>
 

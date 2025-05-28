@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useRouter, useParams } from 'next/navigation';
 import { GeoPoint } from 'firebase/firestore';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 interface Booking {
   id: string;
@@ -391,13 +392,21 @@ function VenueDashboardContent() {
                 </div>
                 <div>
                   <label className="form-label">Address</label>
-                  <input
-                    type="text"
-                    className="text-input"
-                    value={editedVenue.address || ''}
-                    onChange={(e) => setEditedVenue({ ...editedVenue, address: e.target.value })}
-                    required
-                  />
+                  {isEditing ? (
+                    <AddressAutocomplete
+                      onSelect={(address, latitude, longitude) => {
+                        setEditedVenue({
+                          ...editedVenue,
+                          address,
+                          location: new GeoPoint(latitude, longitude)
+                        });
+                      }}
+                      defaultValue={editedVenue.address || ''}
+                      className="text-input"
+                    />
+                  ) : (
+                    <p className="text-[var(--font-size-body)] opacity-90">{editedVenue.address}</p>
+                  )}
                 </div>
                 <div>
                   <label className="form-label">Capacity</label>

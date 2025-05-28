@@ -10,6 +10,7 @@ import { GeoPoint } from 'firebase/firestore';
 import Link from 'next/link';
 import Image from 'next/image';
 import { sendEmailVerification } from 'firebase/auth';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 export default function AddBarPage() {
   const [formData, setFormData] = useState({
@@ -20,8 +21,8 @@ export default function AddBarPage() {
     pricePerHour: '',
     imageFile: null as File | null,
     // Default location (can be updated later)
-    latitude: '-33.908084',
-    longitude: '18.409139'
+    latitude: -33.908084,
+    longitude: 18.409139
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -88,10 +89,7 @@ export default function AddBarPage() {
         pricePerHour: Number(formData.pricePerHour),
         imageURL: imageURL,
         ownerId: user.uid,
-        location: new GeoPoint(
-          Number(formData.latitude),
-          Number(formData.longitude)
-        ),
+        location: new GeoPoint(formData.latitude, formData.longitude),
         openingHours: {
           Monday: { opens: '09:00', closes: '22:00' },
           Tuesday: { opens: '09:00', closes: '22:00' },
@@ -171,15 +169,17 @@ export default function AddBarPage() {
               <label htmlFor="address" className="form-label">
                 Address
               </label>
-              <input
-                id="address"
-                name="address"
-                type="text"
-                required
+              <AddressAutocomplete
+                onSelect={(address, latitude, longitude) => {
+                  setFormData({
+                    ...formData,
+                    address,
+                    latitude,
+                    longitude
+                  });
+                }}
+                defaultValue={formData.address}
                 className="text-input"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Enter your bar's address"
               />
             </div>
 
