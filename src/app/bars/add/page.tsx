@@ -268,8 +268,8 @@ export default function AddBarPage() {
             </div>
 
             <div className="text-center mt-4">
-              <Link href="/dashboard" className="text-link">
-                Back to Dashboard
+              <Link href="/bars" className="text-link">
+                Back to Bars
               </Link>
             </div>
           </form>
