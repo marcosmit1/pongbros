@@ -3,115 +3,89 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-export default function HomePage() {
+export default function Home() {
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Background with bubble effect */}
       <div className="bubble-bg" />
 
-      {/* Navigation */}
-      <nav className="glass-effect fixed top-0 w-full z-50 px-4 py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/" className="flex items-center space-x-2 group">
+      {/* Logo and Hero Section */}
+      <div className="flex-grow flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <Link href="/" className="inline-block">
             <Image
               src="/images/pong-bros-logo.png"
-              alt="PongBros Logo"
-              width={40}
-              height={40}
-              className="rounded-full logo-glow group-hover:scale-105 transition-transform duration-300"
+              alt="Pong Bros Logo"
+              width={180}
+              height={180}
+              className="mx-auto logo-glow hover:scale-105 transition-transform duration-300"
             />
-            <span className="text-[var(--font-size-headline)] font-[var(--font-weight-bold)] foam-text group-hover:opacity-80 transition-opacity duration-300">
-              PongBros
-            </span>
           </Link>
-          <div className="flex space-x-4">
-            <Link href="/login" className="secondary-button">
-              Bar Login
-            </Link>
-            <Link href="/register" className="primary-button">
-              Register Your Bar
-            </Link>
-          </div>
+          <h1 className="mt-6 text-[var(--font-size-display)] font-[var(--font-weight-bold)] foam-text">
+            Pong Bros
+          </h1>
+          <p className="mt-3 text-[var(--font-size-title)] font-[var(--font-weight-medium)] text-beer-foam">
+            Manage Your Beer Pong Empire
+          </p>
         </div>
-      </nav>
 
-      {/* Hero Section */}
-      <div className="pt-32 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-[var(--font-size-large-title)] md:text-6xl font-[var(--font-weight-bold)] foam-text mb-6">
-              Welcome to PongBros<br />Bar Management Portal
-            </h1>
-            <p className="text-[var(--font-size-title)] opacity-80 mb-8">
-              Manage your beer pong tables, bookings, and customers all in one place.
-            </p>
-            <div className="flex justify-center space-x-4">
-              <Link href="/register" className="primary-button">
-                Register Your Bar
-              </Link>
-              <Link href="/login" className="secondary-button">
-                Sign In
-              </Link>
-            </div>
-          </div>
+        {/* CTA Buttons */}
+        <div className="mt-10 flex flex-col sm:flex-row gap-4">
+          <Link
+            href="/login"
+            className="primary-button text-center min-w-[200px]"
+          >
+            Sign In
+          </Link>
+          <Link
+            href="/register"
+            className="secondary-button text-center min-w-[200px]"
+          >
+            Register Your Bar
+          </Link>
         </div>
-      </div>
 
-      {/* Features Section */}
-      <div className="px-4 py-16">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-[var(--font-size-title)] font-[var(--font-weight-bold)] foam-text mb-12 text-center">
-            Why Choose PongBros?
+        {/* Welcome Message */}
+        <div className="mt-16 text-center">
+          <h2 className="text-[var(--font-size-title2)] font-[var(--font-weight-semibold)] foam-text">
+            Welcome to Pong Bros<br />Bar Management Portal
           </h2>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="card hover:scale-[1.02]">
-              <div className="h-2 bg-gradient-to-r from-[var(--beer-amber)] to-[var(--beer-golden)] rounded-t-[20px] -mt-4 -mx-4 mb-6" />
-              <h3 className="text-[var(--font-size-title3)] font-[var(--font-weight-semibold)] mb-4">
+          <p className="mt-4 text-[var(--font-size-headline)] text-beer-foam max-w-2xl mx-auto">
+            Take control of your beer pong tables, manage bookings, and grow your business.
+          </p>
+        </div>
+
+        {/* Features Section */}
+        <div className="mt-16">
+          <h3 className="text-[var(--font-size-title3)] font-[var(--font-weight-semibold)] foam-text text-center mb-8">
+            Why Choose Pong Bros?
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="card">
+              <h4 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] mb-2">
                 Easy Booking Management
-              </h3>
+              </h4>
               <p className="text-[var(--font-size-body)] opacity-80">
-                Handle reservations, check-ins, and manage your tables all in one place.
+                Streamline your table bookings and keep track of all reservations in one place.
               </p>
             </div>
-
-            {/* Feature 2 */}
-            <div className="card hover:scale-[1.02]">
-              <div className="h-2 bg-gradient-to-r from-[var(--beer-red-cup)] to-[var(--beer-amber)] rounded-t-[20px] -mt-4 -mx-4 mb-6" />
-              <h3 className="text-[var(--font-size-title3)] font-[var(--font-weight-semibold)] mb-4">
+            <div className="card">
+              <h4 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] mb-2">
                 Real-time Updates
-              </h3>
+              </h4>
               <p className="text-[var(--font-size-body)] opacity-80">
-                Get instant notifications for new bookings and stay on top of your business.
+                Get instant notifications and manage your tables in real-time.
               </p>
             </div>
-
-            {/* Feature 3 */}
-            <div className="card hover:scale-[1.02]">
-              <div className="h-2 bg-gradient-to-r from-[var(--beer-golden)] to-[var(--beer-foam)] rounded-t-[20px] -mt-4 -mx-4 mb-6" />
-              <h3 className="text-[var(--font-size-title3)] font-[var(--font-weight-semibold)] mb-4">
+            <div className="card">
+              <h4 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] mb-2">
                 Analytics & Insights
-              </h3>
+              </h4>
               <p className="text-[var(--font-size-body)] opacity-80">
-                Track usage, popular times, and optimize your beer pong operations.
+                Track your venue&apos;s performance and make data-driven decisions.
               </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Floating Bubbles Animation */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="loading-container absolute top-1/4 left-1/4">
-          <div className="loading-bubble"></div>
-          <div className="loading-bubble"></div>
-          <div className="loading-bubble"></div>
-        </div>
-        <div className="loading-container absolute top-2/3 right-1/3">
-          <div className="loading-bubble"></div>
-          <div className="loading-bubble"></div>
-          <div className="loading-bubble"></div>
         </div>
       </div>
     </div>

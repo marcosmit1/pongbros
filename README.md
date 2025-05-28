@@ -1,4 +1,4 @@
-# PongBros - Beer Pong Booking System
+# Pong Bros - Beer Pong Booking System
 
 A modern web application for managing beer pong bookings at bars and venues. Built with Next.js 15.2.3 and Firebase.
 

@@ -167,7 +167,7 @@ export default function Register() {
             Register Your Bar
           </h2>
           <p className="mt-2 text-[var(--font-size-subheadline)] text-beer-foam opacity-80">
-            Join the PongBros network
+            Join the Pong Bros network
           </p>
         </div>
       </div>
