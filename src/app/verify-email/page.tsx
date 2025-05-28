@@ -107,14 +107,14 @@ export default function VerifyEmail() {
 
             <div className="text-center space-y-4">
               <p className="text-[var(--font-size-body)]">
-                We've sent a verification email to:
+                We&apos;ve sent a verification email to:
                 <br />
                 <span className="font-semibold">{user?.email}</span>
               </p>
               <p className="text-[var(--font-size-body)] opacity-80">
                 Click the link in the email to verify your account.
                 <br />
-                Don't see it? Check your spam folder.
+                Don&apos;t see it? Check your spam folder.
               </p>
             </div>
 
