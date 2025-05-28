@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, auth } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { sendEmailVerification } from 'firebase/auth';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -23,6 +24,18 @@ export default function Login() {
 
     try {
       await signIn(email, password);
+
+      // Check if email is verified
+      if (!auth.currentUser?.emailVerified) {
+        // Send verification email
+        await sendEmailVerification(auth.currentUser!);
+        // Sign out the user
+        await auth.signOut();
+        router.push('/verify-email');
+        setError('Please verify your email address before logging in. A new verification email has been sent.');
+        setLoading(false);
+        return;
+      }
       
       // First try to get venue by user ID directly
       const venueDoc = await getDoc(doc(db, 'venues', auth.currentUser!.uid));
