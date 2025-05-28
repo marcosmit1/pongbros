@@ -138,7 +138,7 @@ export default function Login() {
               href="/register" 
               className="text-[var(--font-size-subheadline)] hover:opacity-80 transition-opacity"
             >
-              Don't have an account? Sign up
+              Don&apos;t have an account? Sign up
             </Link>
           </div>
         </div>

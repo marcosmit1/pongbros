@@ -60,6 +60,9 @@ module.exports = {
         'ipa-gradient': 'var(--ipa-gradient)',
         'stout-gradient': 'var(--stout-gradient)',
       },
+      borderRadius: {
+        'xl': '0.75rem',
+      }
     },
   },
   plugins: [],
