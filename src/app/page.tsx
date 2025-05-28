@@ -33,13 +33,13 @@ export default function Home() {
         <div className="mt-10 flex flex-col sm:flex-row gap-4">
           <Link
             href="/login"
-            className="primary-button text-center min-w-[200px]"
+            className="primary-button text-center w-[200px] flex items-center justify-center"
           >
             Sign In
           </Link>
           <Link
             href="/register"
-            className="secondary-button text-center min-w-[200px]"
+            className="secondary-button text-center w-[200px] flex items-center justify-center"
           >
             Register Your Bar
           </Link>
