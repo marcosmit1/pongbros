@@ -7,6 +7,7 @@ import { db, auth, storage } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { GeoPoint } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -39,12 +40,12 @@ export default function Register() {
     setError('');
 
     try {
-      // Sign in the user
-      await signIn(formData.email, formData.password);
-
-      if (!auth.currentUser) {
-        throw new Error('No user found after sign in');
-      }
+      // Create new user account
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
 
       let imageURL = '';
       if (formData.imageFile) {
@@ -79,11 +80,17 @@ export default function Register() {
         updatedAt: new Date()
       };
 
-      await setDoc(doc(db, 'venues', auth.currentUser.uid), venueData);
+      await setDoc(doc(db, 'venues', userCredential.user.uid), venueData);
       router.push('/dashboard');
-    } catch (error) {
-      setError('Failed to create account. Please try again.');
-      console.error(error);
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      setError(
+        error.code === 'auth/email-already-in-use'
+          ? 'This email is already registered. Please try logging in instead.'
+          : error.code === 'auth/weak-password'
+          ? 'Password should be at least 6 characters long.'
+          : 'Failed to create account. Please try again.'
+      );
     }
 
     setLoading(false);
@@ -105,6 +112,41 @@ export default function Register() {
                 {error}
               </div>
             )}
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email Address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Password must be at least 6 characters long
+              </p>
+            </div>
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
