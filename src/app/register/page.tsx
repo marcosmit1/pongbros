@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import { db, auth, storage } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { GeoPoint } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -26,7 +26,6 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-  const { signIn } = useAuth();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -82,15 +81,19 @@ export default function Register() {
 
       await setDoc(doc(db, 'venues', userCredential.user.uid), venueData);
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration error:', error);
-      setError(
-        error.code === 'auth/email-already-in-use'
-          ? 'This email is already registered. Please try logging in instead.'
-          : error.code === 'auth/weak-password'
-          ? 'Password should be at least 6 characters long.'
-          : 'Failed to create account. Please try again.'
-      );
+      if (error instanceof FirebaseError) {
+        setError(
+          error.code === 'auth/email-already-in-use'
+            ? 'This email is already registered. Please try logging in instead.'
+            : error.code === 'auth/weak-password'
+            ? 'Password should be at least 6 characters long.'
+            : 'Failed to create account. Please try again.'
+        );
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     }
 
     setLoading(false);
