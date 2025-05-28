@@ -59,6 +59,8 @@ function VenueDashboardContent() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedVenue, setEditedVenue] = useState<Partial<VenueData>>({});
   const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
@@ -132,6 +134,36 @@ function VenueDashboardContent() {
       console.error('Error fetching bookings:', error);
       setError('Failed to load bookings. Please try refreshing the page.');
     }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!venueData || !editedVenue) return;
+
+    try {
+      setLoading(true);
+      setError('');
+      
+      await updateDoc(doc(db, 'venues', venueId), {
+        ...editedVenue,
+        updatedAt: new Date()
+      });
+
+      setVenueData({ ...venueData, ...editedVenue });
+      setSuccess('Venue information updated successfully');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating venue:', error);
+      setError('Failed to update venue information');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setIsEditing(false);
+    setEditedVenue({});
+    setError('');
   };
 
   useEffect(() => {
@@ -332,27 +364,99 @@ function VenueDashboardContent() {
               <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
                 Venue Information
               </h2>
-              <button
-                onClick={handleStatusToggle}
-                className={`status-badge ${venueData?.status === 'active' ? 'live' : 'error'} cursor-pointer`}
-              >
-                {venueData?.status === 'active' ? 'Active' : 'Inactive'}
-              </button>
+              <div className="flex gap-2">
+                {!isEditing ? (
+                  <button
+                    onClick={() => {
+                      setIsEditing(true);
+                      setEditedVenue(venueData || {});
+                    }}
+                    className="secondary-button py-2 px-4 text-sm"
+                  >
+                    Edit Venue
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleEditCancel}
+                      className="secondary-button py-2 px-4 text-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleEditSubmit}
+                      className="primary-button py-2 px-4 text-sm"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="space-y-4">
-              <div>
-                <p className="text-[var(--font-size-subheadline)] opacity-80">Address</p>
-                <p className="text-[var(--font-size-body)]">{venueData.address}</p>
+
+            {isEditing ? (
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div>
+                  <label className="form-label">Name</label>
+                  <input
+                    type="text"
+                    className="text-input"
+                    value={editedVenue.name || ''}
+                    onChange={(e) => setEditedVenue({ ...editedVenue, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Address</label>
+                  <input
+                    type="text"
+                    className="text-input"
+                    value={editedVenue.address || ''}
+                    onChange={(e) => setEditedVenue({ ...editedVenue, address: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Capacity</label>
+                  <input
+                    type="number"
+                    className="text-input"
+                    value={editedVenue.capacity || ''}
+                    onChange={(e) => setEditedVenue({ ...editedVenue, capacity: Number(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Price per 30 min (R)</label>
+                  <input
+                    type="number"
+                    className="text-input"
+                    value={editedVenue.pricePerHour || ''}
+                    onChange={(e) => setEditedVenue({ ...editedVenue, pricePerHour: Number(e.target.value) })}
+                    required
+                  />
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[var(--font-size-subheadline)] opacity-80">Name</p>
+                  <p className="text-[var(--font-size-body)]">{venueData?.name}</p>
+                </div>
+                <div>
+                  <p className="text-[var(--font-size-subheadline)] opacity-80">Address</p>
+                  <p className="text-[var(--font-size-body)]">{venueData?.address}</p>
+                </div>
+                <div>
+                  <p className="text-[var(--font-size-subheadline)] opacity-80">Capacity</p>
+                  <p className="text-[var(--font-size-body)]">{venueData?.capacity} people</p>
+                </div>
+                <div>
+                  <p className="text-[var(--font-size-subheadline)] opacity-80">Price per 30 min</p>
+                  <p className="text-[var(--font-size-body)]">R{venueData?.pricePerHour}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[var(--font-size-subheadline)] opacity-80">Capacity</p>
-                <p className="text-[var(--font-size-body)]">{venueData.capacity} people</p>
-              </div>
-              <div>
-                <p className="text-[var(--font-size-subheadline)] opacity-80">Price per Hour</p>
-                <p className="text-[var(--font-size-body)]">R{venueData.pricePerHour}</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </main>

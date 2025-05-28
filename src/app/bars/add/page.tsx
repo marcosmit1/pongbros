@@ -170,7 +170,7 @@ export default function AddBarPage() {
 
               <div>
                 <label htmlFor="pricePerHour" className="block text-sm font-medium text-gray-700">
-                  Price per Hour (R)
+                  Price per 30 min (R)
                 </label>
                 <input
                   id="pricePerHour"

@@ -284,7 +284,7 @@ export default function Register() {
 
             <div>
               <label htmlFor="pricePerHour" className="form-label">
-                Price per Hour
+                Price per 30 min
               </label>
               <input
                 id="pricePerHour"

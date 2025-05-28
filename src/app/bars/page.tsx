@@ -126,13 +126,10 @@ export default function BarsPage() {
               </div>
               
               <div className="flex flex-col flex-grow space-y-4">
-                <div className="flex justify-between items-start gap-2">
+                <div>
                   <h3 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] truncate">
                     {bar.name}
                   </h3>
-                  <span className={`status-badge ${bar.status === 'active' ? 'live' : 'error'} whitespace-nowrap`}>
-                    {bar.status === 'active' ? 'Active' : 'Inactive'}
-                  </span>
                 </div>
                 
                 <p className="text-[var(--font-size-subheadline)] opacity-80 line-clamp-2">
