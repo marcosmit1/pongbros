@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { sendEmailVerification } from 'firebase/auth';
@@ -17,33 +17,31 @@ export default function VerifyEmail() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const activateBar = async () => {
-    if (!user) return;
-    
-    try {
-      // Find the user's bar
-      const venuesRef = collection(db, 'venues');
-      const q = query(venuesRef, where('ownerId', '==', user.uid));
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        const venueDoc = querySnapshot.docs[0];
-        // Update the bar status to active
-        await updateDoc(doc(db, 'venues', venueDoc.id), {
-          status: 'active',
-          updatedAt: new Date()
-        });
-      }
-    } catch (error) {
-      console.error('Error activating bar:', error);
-    }
-  };
-
   useEffect(() => {
     if (!user) {
       router.push('/login');
       return;
     }
+
+    const activateBar = async () => {
+      try {
+        // Find the user's bar
+        const venuesRef = collection(db, 'venues');
+        const q = query(venuesRef, where('ownerId', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const venueDoc = querySnapshot.docs[0];
+          // Update the bar status to active
+          await updateDoc(doc(db, 'venues', venueDoc.id), {
+            status: 'active',
+            updatedAt: new Date()
+          });
+        }
+      } catch (error) {
+        console.error('Error activating bar:', error);
+      }
+    };
 
     if (user.emailVerified) {
       activateBar().then(() => {
@@ -64,7 +62,7 @@ export default function VerifyEmail() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [user, router, activateBar]);
+  }, [user, router]);
 
   useEffect(() => {
     if (countdown > 0 && loading) {
