@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import Footer from '@/components/Footer';
 
 function TopNav() {
   const { user, signOut } = useAuth();
@@ -30,9 +31,12 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <div className="flex flex-col h-screen">
       <TopNav />
-      {children}
-    </>
+      <main className="flex-1 h-full">
+        {children}
+      </main>
+      <Footer />
+    </div>
   );
 } 
