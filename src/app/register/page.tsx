@@ -145,7 +145,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center relative overflow-hidden">
+    <div className="h-full relative overflow-hidden py-8">
       {/* Background with bubble effect */}
       <div className="bubble-bg" />
 
@@ -170,7 +170,7 @@ export default function Register() {
         </div>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 mb-8">
         <div className="card mx-4 sm:mx-0">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
@@ -268,7 +268,7 @@ export default function Register() {
 
             <div>
               <label htmlFor="capacity" className="form-label">
-                Capacity
+                Number of Tables
               </label>
               <input
                 id="capacity"
@@ -278,7 +278,7 @@ export default function Register() {
                 className="text-input"
                 value={formData.capacity}
                 onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                placeholder="Number of people"
+                placeholder="Number of beer pong tables"
               />
             </div>
 
@@ -294,7 +294,7 @@ export default function Register() {
                 className="text-input"
                 value={formData.pricePerHour}
                 onChange={(e) => setFormData({ ...formData, pricePerHour: e.target.value })}
-                placeholder="Price in ZAR"
+                placeholder="Price per 30 min in ZAR"
               />
             </div>
 

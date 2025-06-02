@@ -202,7 +202,7 @@ export default function AddBarPage() {
 
             <div>
               <label htmlFor="capacity" className="form-label">
-                Beer Pong Table Capacity
+                Number of Tables
               </label>
               <input
                 id="capacity"
@@ -212,13 +212,13 @@ export default function AddBarPage() {
                 className="text-input"
                 value={formData.capacity}
                 onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                placeholder="Number of tables"
+                placeholder="Number of beer pong tables"
               />
             </div>
 
             <div>
               <label htmlFor="pricePerHour" className="form-label">
-                Price per 30 min (R)
+                Price per 30 min
               </label>
               <input
                 id="pricePerHour"
@@ -228,7 +228,7 @@ export default function AddBarPage() {
                 className="text-input"
                 value={formData.pricePerHour}
                 onChange={(e) => setFormData({ ...formData, pricePerHour: e.target.value })}
-                placeholder="Price in ZAR"
+                placeholder="Price per 30 min in ZAR"
               />
             </div>
 
