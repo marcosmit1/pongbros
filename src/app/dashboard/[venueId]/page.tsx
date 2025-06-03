@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { useRouter, useParams } from 'next/navigation';
 import { GeoPoint } from 'firebase/firestore';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
@@ -104,18 +104,26 @@ function VenueDashboardContent() {
         where('startTime', '<', nextDay)
       );
       
-      const querySnapshot = await getDocs(q);
-      const fetchedBookings = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        startTime: doc.data().startTime?.toDate(),
-        endTime: doc.data().endTime?.toDate(),
-        createdAt: doc.data().createdAt?.toDate()
-      })) as Booking[];
+      // Set up real-time listener
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const fetchedBookings = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          startTime: doc.data().startTime?.toDate(),
+          endTime: doc.data().endTime?.toDate(),
+          createdAt: doc.data().createdAt?.toDate()
+        })) as Booking[];
 
-      setBookings(fetchedBookings);
+        setBookings(fetchedBookings);
+      }, (error) => {
+        console.error('Error fetching bookings:', error);
+        setError('Failed to load bookings. Please try refreshing the page.');
+      });
+
+      // Return unsubscribe function for cleanup
+      return unsubscribe;
     } catch (error) {
-      console.error('Error fetching bookings:', error);
+      console.error('Error setting up bookings listener:', error);
       setError('Failed to load bookings. Please try refreshing the page.');
     }
   }, [venueId]);
@@ -183,7 +191,17 @@ function VenueDashboardContent() {
         }
         
         setVenueData(venueData);
-        await fetchBookings(selectedDate);
+        
+        // Set up bookings listener and store the unsubscribe function
+        const unsubscribe = await fetchBookings(selectedDate);
+        
+        // Cleanup function to remove the listener when component unmounts
+        // or when selectedDate changes
+        return () => {
+          if (unsubscribe) {
+            unsubscribe();
+          }
+        };
       } catch (error) {
         console.error('Error fetching data:', error);
         setError('Failed to load venue data. Please try refreshing the page.');
