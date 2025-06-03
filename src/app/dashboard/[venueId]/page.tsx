@@ -9,16 +9,14 @@ import { GeoPoint } from 'firebase/firestore';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 interface Booking {
-  id: string;
-  venueId: string;
-  userId: string;
-  tableNumber: number;
-  date: Date;
-  timeSlot: string;
-  numberOfPlayers: number;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  createdAt: Date;
-  updatedAt: Date;
+  id: string;           // Auto-generated Firestore document ID
+  barId: string;        // Reference to the venue/bar in the 'venues' collection
+  userId: string;       // Firebase Auth user ID of the person making the booking
+  startTime: any;       // Firebase Timestamp of when the booking starts
+  endTime: any;         // Firebase Timestamp of when the booking ends (30 mins after start)
+  tableNumber: number;  // The table number that was booked
+  status: string;       // Can be "pending", "confirmed", or "cancelled"
+  createdAt: any;      // Firebase Timestamp of when the booking was created
 }
 
 interface VenueData {
@@ -83,6 +81,8 @@ function VenueDashboardContent() {
             : booking
         )
       );
+
+      setSuccess(`Booking ${action}ed successfully`);
     } catch (error) {
       console.error(`Error ${action}ing booking:`, error);
       setError(`Failed to ${action} booking. Please try again.`);
@@ -99,18 +99,18 @@ function VenueDashboardContent() {
       const bookingsRef = collection(db, 'bookings');
       const q = query(
         bookingsRef,
-        where('venueId', '==', venueId),
-        where('date', '>=', selectedDateObj),
-        where('date', '<', nextDay)
+        where('barId', '==', venueId),
+        where('startTime', '>=', selectedDateObj),
+        where('startTime', '<', nextDay)
       );
       
       const querySnapshot = await getDocs(q);
       const fetchedBookings = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        date: doc.data().date.toDate(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate()
+        startTime: doc.data().startTime?.toDate(),
+        endTime: doc.data().endTime?.toDate(),
+        createdAt: doc.data().createdAt?.toDate()
       })) as Booking[];
 
       setBookings(fetchedBookings);
@@ -118,7 +118,7 @@ function VenueDashboardContent() {
       console.error('Error fetching bookings:', error);
       setError('Failed to load bookings. Please try refreshing the page.');
     }
-  }, [venueId, setError]);
+  }, [venueId]);
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -300,10 +300,7 @@ function VenueDashboardContent() {
                           Table {booking.tableNumber}
                         </p>
                         <p className="text-[var(--font-size-caption)] opacity-60">
-                          Time: {booking.timeSlot}
-                        </p>
-                        <p className="text-[var(--font-size-caption)] opacity-60">
-                          Players: {booking.numberOfPlayers}
+                          Time: {booking.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {booking.endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
