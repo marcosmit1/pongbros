@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, updateDoc, onSnapshot, Timestamp } from 'firebase/firestore';
 import { useRouter, useParams } from 'next/navigation';
 import { GeoPoint } from 'firebase/firestore';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
@@ -12,11 +12,11 @@ interface Booking {
   id: string;           // Auto-generated Firestore document ID
   barId: string;        // Reference to the venue/bar in the 'venues' collection
   userId: string;       // Firebase Auth user ID of the person making the booking
-  startTime: any;       // Firebase Timestamp of when the booking starts
-  endTime: any;         // Firebase Timestamp of when the booking ends (30 mins after start)
+  startTime: Timestamp; // Firebase Timestamp of when the booking starts
+  endTime: Timestamp;   // Firebase Timestamp of when the booking ends (30 mins after start)
   tableNumber: number;  // The table number that was booked
   status: string;       // Can be "pending", "confirmed", or "cancelled"
-  createdAt: any;      // Firebase Timestamp of when the booking was created
+  createdAt: Timestamp; // Firebase Timestamp of when the booking was created
 }
 
 interface VenueData {
@@ -33,6 +33,12 @@ interface VenueData {
   openingHours: {
     [key: string]: { opens: string; closes: string };
   };
+}
+
+interface BookingDisplay extends Omit<Booking, 'startTime' | 'endTime' | 'createdAt'> {
+  startTime: Date;
+  endTime: Date;
+  createdAt: Date;
 }
 
 function LoadingFallback() {
@@ -52,7 +58,7 @@ function formatDate(date: Date): string {
 }
 
 function VenueDashboardContent() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<BookingDisplay[]>([]);
   const [venueData, setVenueData] = useState<VenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -106,13 +112,16 @@ function VenueDashboardContent() {
       
       // Set up real-time listener
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        const fetchedBookings = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          startTime: doc.data().startTime?.toDate(),
-          endTime: doc.data().endTime?.toDate(),
-          createdAt: doc.data().createdAt?.toDate()
-        })) as Booking[];
+        const fetchedBookings = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            startTime: data.startTime?.toDate(),
+            endTime: data.endTime?.toDate(),
+            createdAt: data.createdAt?.toDate()
+          };
+        }) as BookingDisplay[];
 
         setBookings(fetchedBookings);
       }, (error) => {
