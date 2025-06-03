@@ -3,20 +3,47 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, query, where, doc, getDoc, updateDoc, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, updateDoc, onSnapshot, Timestamp, getDocs } from 'firebase/firestore';
 import { useRouter, useParams } from 'next/navigation';
 import { GeoPoint } from 'firebase/firestore';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
+import { debounce } from 'lodash';
+
+interface Player {
+  username: string;
+  userId: string;
+  checkedInAt: Timestamp;
+  validated: boolean;
+}
+
+interface ValidatedPlayer {
+  username: string;
+  userId: string;
+  validated: boolean;
+}
+
+interface BookingUser {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber?: string;
+}
 
 interface Booking {
-  id: string;           // Auto-generated Firestore document ID
-  barId: string;        // Reference to the venue/bar in the 'venues' collection
-  userId: string;       // Firebase Auth user ID of the person making the booking
-  startTime: Timestamp; // Firebase Timestamp of when the booking starts
-  endTime: Timestamp;   // Firebase Timestamp of when the booking ends (30 mins after start)
-  tableNumber: number;  // The table number that was booked
-  status: string;       // Can be "pending", "confirmed", or "cancelled"
-  createdAt: Timestamp; // Firebase Timestamp of when the booking was created
+  id: string;
+  barId: string;
+  userId: string;
+  startTime: Timestamp;
+  endTime: Timestamp;
+  tableNumber: number;
+  status: string;
+  createdAt: Timestamp;
+  userDetails?: BookingUser;
+  notes?: string;
+  totalPrice: number;
+  checkedIn?: boolean;
+  checkedInAt?: Timestamp;
+  players?: Player[];
 }
 
 interface VenueData {
@@ -35,10 +62,11 @@ interface VenueData {
   };
 }
 
-interface BookingDisplay extends Omit<Booking, 'startTime' | 'endTime' | 'createdAt'> {
+interface BookingDisplay extends Omit<Booking, 'startTime' | 'endTime' | 'createdAt' | 'checkedInAt'> {
   startTime: Date;
   endTime: Date;
   createdAt: Date;
+  checkedInAt?: Date;
 }
 
 function LoadingFallback() {
@@ -59,6 +87,15 @@ function formatDate(date: Date): string {
 
 function VenueDashboardContent() {
   const [bookings, setBookings] = useState<BookingDisplay[]>([]);
+  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [selectedBooking, setSelectedBooking] = useState<BookingDisplay | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
+  const [players, setPlayers] = useState<ValidatedPlayer[]>([
+    { username: '', userId: '', validated: false },
+    { username: '', userId: '', validated: false }
+  ]);
+  const [isSearching, setIsSearching] = useState<boolean[]>([false, false]);
   const [venueData, setVenueData] = useState<VenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -95,6 +132,111 @@ function VenueDashboardContent() {
     }
   };
 
+  const searchUser = async (username: string, playerIndex: number) => {
+    if (!username.trim()) {
+      setPlayers(prev => {
+        const updated = [...prev];
+        updated[playerIndex] = { username: '', userId: '', validated: false };
+        return updated;
+      });
+      return;
+    }
+
+    setIsSearching(prev => {
+      const updated = [...prev];
+      updated[playerIndex] = true;
+      return updated;
+    });
+
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(
+        usersRef,
+        where('username', '==', username.trim().toLowerCase())
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0];
+        setPlayers(prev => {
+          const updated = [...prev];
+          updated[playerIndex] = {
+            username: username.trim(),
+            userId: userDoc.id,
+            validated: true
+          };
+          return updated;
+        });
+        setError('');
+      } else {
+        setPlayers(prev => {
+          const updated = [...prev];
+          updated[playerIndex] = {
+            username: username.trim(),
+            userId: '',
+            validated: false
+          };
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error('Error searching for user:', error);
+      setError('Failed to validate username');
+    } finally {
+      setIsSearching(prev => {
+        const updated = [...prev];
+        updated[playerIndex] = false;
+        return updated;
+      });
+    }
+  };
+
+  const debouncedSearch = useCallback(
+    debounce((username: string, playerIndex: number) => {
+      searchUser(username, playerIndex);
+    }, 1000),
+    []
+  );
+
+  const handleCheckIn = async (bookingId: string, players: ValidatedPlayer[]) => {
+    try {
+      if (players.some(player => !player.username.trim())) {
+        setError('Please enter usernames for all players');
+        return;
+      }
+
+      if (players.some(player => !player.validated)) {
+        setError('Please ensure all usernames are valid');
+        return;
+      }
+
+      const bookingRef = doc(db, 'bookings', bookingId);
+      const now = Timestamp.now();
+      await updateDoc(bookingRef, {
+        checkedIn: true,
+        checkedInAt: now,
+        players: players.map(player => ({
+          username: player.username,
+          userId: player.userId,
+          checkedInAt: now
+        })),
+        status: 'active',
+        updatedAt: now
+      });
+
+      setSuccess('Players checked in successfully');
+      setIsCheckInModalOpen(false);
+      setPlayers([
+        { username: '', userId: '', validated: false },
+        { username: '', userId: '', validated: false }
+      ]);
+    } catch (error) {
+      console.error('Error checking in:', error);
+      setError('Failed to check in players. Please try again.');
+    }
+  };
+
   const fetchBookings = useCallback(async (date: string) => {
     try {
       const selectedDateObj = new Date(date);
@@ -102,13 +244,23 @@ function VenueDashboardContent() {
       const nextDay = new Date(selectedDateObj);
       nextDay.setDate(nextDay.getDate() + 1);
 
+      const now = new Date();
       const bookingsRef = collection(db, 'bookings');
+      
+      // Query based on selected tab
       const q = query(
         bookingsRef,
         where('barId', '==', venueId),
-        where('startTime', '>=', selectedDateObj),
-        where('startTime', '<', nextDay)
-      );
+        ...(selectedTab === 'upcoming' 
+          ? [
+              where('startTime', '>=', now),
+              where('startTime', '<', new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)) // Next 7 days
+            ]
+          : [
+              where('endTime', '<', now),
+              where('endTime', '>=', new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)) // Last 30 days
+            ]
+      ));
       
       // Set up real-time listener
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -135,7 +287,7 @@ function VenueDashboardContent() {
       console.error('Error setting up bookings listener:', error);
       setError('Failed to load bookings. Please try refreshing the page.');
     }
-  }, [venueId]);
+  }, [venueId, selectedTab]);
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,6 +317,26 @@ function VenueDashboardContent() {
     setIsEditing(false);
     setEditedVenue({});
     setError('');
+  };
+
+  const handleBookingClick = async (booking: BookingDisplay) => {
+    try {
+      // Fetch user details if not already loaded
+      if (!booking.userDetails) {
+        const userDoc = await getDoc(doc(db, 'users', booking.userId));
+        if (userDoc.exists()) {
+          booking.userDetails = {
+            id: userDoc.id,
+            ...userDoc.data()
+          } as BookingUser;
+        }
+      }
+      setSelectedBooking(booking);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching booking details:', error);
+      setError('Failed to load booking details');
+    }
   };
 
   useEffect(() => {
@@ -298,69 +470,114 @@ function VenueDashboardContent() {
               <div>
                 <p className="text-[var(--font-size-subheadline)] opacity-80">Active Tables</p>
                 <p className="text-[var(--font-size-title)] font-[var(--font-weight-bold)] text-primary">
-                  {bookings.filter(b => b.status === 'confirmed').length}
+                  {bookings.filter(b => b.status === 'active').length}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Bookings */}
-          <div className="card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
-                Bookings
-              </h2>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="text-input py-1 px-2"
-              />
+          <div className="card overflow-hidden">
+            <div className="flex flex-col space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
+                  Bookings
+                </h2>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="text-input py-1 px-2"
+                />
+              </div>
+              
+              <div className="flex space-x-2 border-b border-[var(--beer-amber)] border-opacity-20">
+                <button
+                  onClick={() => setSelectedTab('upcoming')}
+                  className={`pb-2 px-4 text-sm font-medium transition-all relative ${
+                    selectedTab === 'upcoming'
+                      ? 'text-[var(--beer-amber)]'
+                      : 'text-gray-500 hover:text-[var(--beer-amber)]'
+                  }`}
+                >
+                  Upcoming
+                  {selectedTab === 'upcoming' && (
+                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[var(--beer-amber)]"></div>
+                  )}
+                </button>
+                <button
+                  onClick={() => setSelectedTab('past')}
+                  className={`pb-2 px-4 text-sm font-medium transition-all relative ${
+                    selectedTab === 'past'
+                      ? 'text-[var(--beer-amber)]'
+                      : 'text-gray-500 hover:text-[var(--beer-amber)]'
+                  }`}
+                >
+                  Past
+                  {selectedTab === 'past' && (
+                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[var(--beer-amber)]"></div>
+                  )}
+                </button>
+              </div>
             </div>
-            <div className="space-y-4">
+
+            <div className="h-[calc(100vh-24rem)] overflow-y-auto pr-2 custom-scrollbar mt-4">
               {bookings.length > 0 ? (
-                bookings.map(booking => (
-                  <div key={booking.id} className="p-4 glass-effect rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-[var(--font-size-body)] font-[var(--font-weight-medium)]">
-                          Table {booking.tableNumber}
-                        </p>
-                        <p className="text-[var(--font-size-caption)] opacity-60">
-                          Time: {booking.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {booking.endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className={`status-badge ${
-                          booking.status === 'confirmed' ? 'success' : 
-                          booking.status === 'pending' ? 'warning' : 
-                          'error'
-                        }`}>
-                          {booking.status}
-                        </span>
-                        {booking.status === 'pending' && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleBookingAction(booking.id, 'confirm')}
-                              className="primary-button text-xs py-1 px-2"
-                            >
-                              Confirm
-                            </button>
-                            <button
-                              onClick={() => handleBookingAction(booking.id, 'cancel')}
-                              className="secondary-button text-xs py-1 px-2"
-                            >
-                              Cancel
-                            </button>
+                <div className="relative">
+                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-[var(--beer-amber)] opacity-20"></div>
+                  <div className="space-y-4">
+                    {bookings
+                      .sort((a, b) => 
+                        selectedTab === 'upcoming' 
+                          ? a.startTime.getTime() - b.startTime.getTime()
+                          : b.endTime.getTime() - a.endTime.getTime()
+                      )
+                      .map(booking => (
+                        <div key={booking.id} className="relative pl-8">
+                          <div className="absolute left-3 top-4 w-3 h-3 rounded-full bg-[var(--beer-amber)]"></div>
+                          <div 
+                            onClick={() => handleBookingClick(booking)}
+                            className="p-4 glass-effect rounded-lg hover:bg-opacity-10 transition-all cursor-pointer"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className="text-[var(--font-size-body)] font-[var(--font-weight-medium)]">
+                                    Table {booking.tableNumber}
+                                  </p>
+                                  <span className={`text-sm ${
+                                    booking.status === 'active' ? 'text-[var(--beer-amber)]' :
+                                    booking.status === 'confirmed' ? 'text-green-500' : 
+                                    booking.status === 'pending' ? 'text-yellow-500' : 
+                                    'text-red-500'
+                                  }`}>
+                                    {booking.status}
+                                  </span>
+                                </div>
+                                <p className="text-[var(--font-size-caption)] opacity-60">
+                                  {booking.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {booking.endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                                <p className="text-[var(--font-size-caption)] opacity-60">
+                                  {booking.startTime.toLocaleDateString()}
+                                </p>
+                              </div>
+                              {booking.checkedIn && (
+                                <div className="flex items-center gap-1">
+                                  <span className="w-2 h-2 rounded-full bg-[var(--beer-amber)]"></span>
+                                  <span className="text-[var(--font-size-caption)] text-[var(--beer-amber)]">Live</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
+                        </div>
+                      ))}
                   </div>
-                ))
+                </div>
               ) : (
                 <div className="text-center p-6 glass-effect rounded-lg">
-                  <p className="text-[var(--font-size-body)] opacity-60">No bookings for this date</p>
+                  <p className="text-[var(--font-size-body)] opacity-60">
+                    No {selectedTab} bookings found
+                  </p>
                 </div>
               )}
             </div>
@@ -479,6 +696,290 @@ function VenueDashboardContent() {
           </div>
         </div>
       </main>
+
+      {/* Booking Details Modal */}
+      {isModalOpen && selectedBooking && (
+        <div 
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div 
+            className="bg-[var(--background)] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="relative bg-[var(--beer-amber)] p-6">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-6 right-6 text-black/60 hover:text-black transition-colors"
+                aria-label="Close modal"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-[var(--font-size-title)] font-[var(--font-weight-bold)] text-black">
+                    Table {selectedBooking.tableNumber}
+                  </h2>
+                  <span className={`status-badge ${
+                    selectedBooking.status === 'confirmed' ? 'success' : 
+                    selectedBooking.status === 'pending' ? 'warning' : 
+                    'error'
+                  }`}>
+                    {selectedBooking.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-black/80 font-medium">
+                    {selectedBooking.startTime.toLocaleDateString()}
+                  </p>
+                  <p className="text-black/80 font-medium">
+                    30 minutes
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-8rem)] custom-scrollbar">
+              {/* Time Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
+                    Booking Time
+                  </h3>
+                  <p className="text-[var(--font-size-title)] font-[var(--font-weight-bold)] text-[var(--beer-amber)]">
+                    R{selectedBooking.totalPrice}
+                  </p>
+                </div>
+                <div className="bg-[var(--beer-amber)]/5 rounded-lg p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-[var(--font-size-subheadline)] opacity-60 mb-1">Start</p>
+                    <p className="text-[var(--font-size-body)] font-medium">
+                      {selectedBooking.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <div className="h-px w-12 bg-[var(--beer-amber)]"></div>
+                  <div>
+                    <p className="text-[var(--font-size-subheadline)] opacity-60 mb-1">End</p>
+                    <p className="text-[var(--font-size-body)] font-medium">
+                      {selectedBooking.endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Information */}
+              {selectedBooking.userDetails && (
+                <div className="space-y-2">
+                  <h3 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
+                    Customer Details
+                  </h3>
+                  <div className="bg-[var(--beer-amber)]/5 rounded-lg p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[var(--font-size-subheadline)] opacity-60 mb-1">Name</p>
+                        <p className="text-[var(--font-size-body)] font-medium">
+                          {selectedBooking.userDetails.name}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[var(--font-size-subheadline)] opacity-60 mb-1">Email</p>
+                        <p className="text-[var(--font-size-body)] font-medium">
+                          {selectedBooking.userDetails.email}
+                        </p>
+                      </div>
+                    </div>
+                    {selectedBooking.userDetails.phoneNumber && (
+                      <div>
+                        <p className="text-[var(--font-size-subheadline)] opacity-60 mb-1">Phone</p>
+                        <p className="text-[var(--font-size-body)] font-medium">
+                          {selectedBooking.userDetails.phoneNumber}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes Section */}
+              {selectedBooking.notes && (
+                <div className="space-y-2">
+                  <h3 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
+                    Notes
+                  </h3>
+                  <div className="bg-[var(--beer-amber)]/5 rounded-lg p-4">
+                    <p className="text-[var(--font-size-body)]">{selectedBooking.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Check In Section */}
+              {selectedBooking.status === 'confirmed' && !selectedBooking.checkedIn && selectedTab === 'upcoming' && (
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setIsCheckInModalOpen(true);
+                    }}
+                    className="primary-button w-full py-3"
+                  >
+                    Check In Players
+                  </button>
+                </div>
+              )}
+
+              {/* Players Section - Show after check-in */}
+              {selectedBooking.players && selectedBooking.players.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)]">
+                    Players
+                  </h3>
+                  <div className="bg-[var(--beer-amber)]/5 rounded-lg p-4 space-y-2">
+                    {selectedBooking.players.map((player, index) => (
+                      <div key={index} className="flex justify-between items-center">
+                        <p className="text-[var(--font-size-body)] font-medium">
+                          {player.username}
+                        </p>
+                        <p className="text-[var(--font-size-caption)] opacity-60">
+                          Checked in at {player.checkedInAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              {selectedBooking.status === 'pending' && selectedTab === 'upcoming' && (
+                <div className="flex gap-4 pt-2">
+                  <button
+                    onClick={() => {
+                      handleBookingAction(selectedBooking.id, 'confirm');
+                      setIsModalOpen(false);
+                    }}
+                    className="primary-button flex-1 py-3"
+                  >
+                    Confirm Booking
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleBookingAction(selectedBooking.id, 'cancel');
+                      setIsModalOpen(false);
+                    }}
+                    className="secondary-button flex-1 py-3"
+                  >
+                    Cancel Booking
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Check-in Modal */}
+      {isCheckInModalOpen && selectedBooking && (
+        <div 
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          onClick={() => setIsCheckInModalOpen(false)}
+        >
+          <div 
+            className="bg-[var(--background)] rounded-xl max-w-md w-full overflow-hidden shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="bg-[var(--beer-amber)] p-6">
+              <h2 className="text-[var(--font-size-title)] font-[var(--font-weight-bold)] text-black">
+                Check In Players
+              </h2>
+              <p className="text-black/80 mt-1">
+                Table {selectedBooking.tableNumber}
+              </p>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="space-y-4">
+                {players.map((player, index) => (
+                  <div key={index}>
+                    <label 
+                      className="text-[var(--font-size-subheadline)] opacity-80 mb-1 block"
+                      htmlFor={`player${index + 1}`}
+                    >
+                      Player {index + 1} Username
+                    </label>
+                    <div className="relative">
+                      <input
+                        id={`player${index + 1}`}
+                        type="text"
+                        value={player.username}
+                        onChange={(e) => {
+                          const newUsername = e.target.value;
+                          setPlayers(prev => {
+                            const updated = [...prev];
+                            updated[index] = {
+                              ...updated[index],
+                              username: newUsername,
+                              validated: false
+                            };
+                            return updated;
+                          });
+                          debouncedSearch(newUsername, index);
+                        }}
+                        className={`text-input w-full pr-10 ${
+                          player.username && (player.validated ? 'border-green-500' : 'border-red-500')
+                        }`}
+                        placeholder="Enter username"
+                      />
+                      {player.username && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {isSearching[index] ? (
+                            <div className="w-5 h-5 border-2 border-[var(--beer-amber)] border-t-transparent rounded-full animate-spin"></div>
+                          ) : player.validated ? (
+                            <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {player.username && !player.validated && !isSearching[index] && (
+                      <p className="text-red-500 text-sm mt-1">Username not found</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => handleCheckIn(selectedBooking.id, players)}
+                  className="primary-button flex-1 py-3"
+                  disabled={players.some(p => !p.validated) || isSearching.some(s => s)}
+                >
+                  Check In Players
+                </button>
+                <button
+                  onClick={() => {
+                    setIsCheckInModalOpen(false);
+                    setPlayers([
+                      { username: '', userId: '', validated: false },
+                      { username: '', userId: '', validated: false }
+                    ]);
+                  }}
+                  className="secondary-button flex-1 py-3"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

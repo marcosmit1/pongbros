@@ -83,7 +83,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center relative overflow-hidden">
+    <div className="h-full relative overflow-hidden py-8">
       {/* Background with bubble effect */}
       <div className="bubble-bg" />
 
@@ -108,7 +108,7 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 mb-8">
         <div className="card mx-4 sm:mx-0">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
