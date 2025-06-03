@@ -149,27 +149,42 @@ function VenueDashboardContent() {
     });
 
     try {
+      console.log('Searching for username:', username.trim().toLowerCase());
       const usersRef = collection(db, 'users');
-      const q = query(
-        usersRef,
-        where('username', '==', username.trim().toLowerCase())
-      );
+      const searchTerm = username.trim().toLowerCase();
       
+      // Log the query we're about to make
+      console.log('Search term:', searchTerm);
+      
+      const q = query(usersRef);
       const querySnapshot = await getDocs(q);
       
-      if (!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0];
+      // Log all users to see what we're working with
+      console.log('All users:', querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        data: doc.data()
+      })));
+      
+      // Find matching user manually to see if case sensitivity is the issue
+      const matchingDoc = querySnapshot.docs.find(doc => {
+        const userData = doc.data();
+        return userData.username?.toLowerCase() === searchTerm;
+      });
+
+      if (matchingDoc) {
+        console.log('Found matching user:', matchingDoc.data());
         setPlayers(prev => {
           const updated = [...prev];
           updated[playerIndex] = {
             username: username.trim(),
-            userId: userDoc.id,
+            userId: matchingDoc.id,
             validated: true
           };
           return updated;
         });
         setError('');
       } else {
+        console.log('No matching user found');
         setPlayers(prev => {
           const updated = [...prev];
           updated[playerIndex] = {
