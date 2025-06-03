@@ -17,7 +17,7 @@ export default function AddBarPage() {
     name: '',
     address: '',
     description: '',
-    capacity: '',
+    numberOfTables: '',
     pricePerHour: '',
     imageFile: null as File | null,
     // Default location (can be updated later)
@@ -86,7 +86,7 @@ export default function AddBarPage() {
         name: formData.name,
         address: formData.address,
         description: formData.description,
-        capacity: Number(formData.capacity),
+        numberOfTables: Number(formData.numberOfTables),
         pricePerHour: Number(formData.pricePerHour),
         imageURL: imageURL,
         ownerId: user.uid,
@@ -201,17 +201,17 @@ export default function AddBarPage() {
             </div>
 
             <div>
-              <label htmlFor="capacity" className="form-label">
+              <label htmlFor="numberOfTables" className="form-label">
                 Number of Tables
               </label>
               <input
-                id="capacity"
-                name="capacity"
+                id="numberOfTables"
+                name="numberOfTables"
                 type="number"
                 required
                 className="text-input"
-                value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                value={formData.numberOfTables}
+                onChange={(e) => setFormData({ ...formData, numberOfTables: e.target.value })}
                 placeholder="Number of beer pong tables"
               />
             </div>

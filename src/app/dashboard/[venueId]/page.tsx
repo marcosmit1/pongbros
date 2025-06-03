@@ -26,7 +26,7 @@ interface VenueData {
   name: string;
   address: string;
   description: string;
-  capacity: number;
+  numberOfTables: number;
   pricePerHour: number;
   imageURL: string;
   location: GeoPoint;
@@ -409,14 +409,17 @@ function VenueDashboardContent() {
                   )}
                 </div>
                 <div>
-                  <label className="form-label">Capacity</label>
-                  <input
-                    type="number"
-                    className="text-input"
-                    value={editedVenue.capacity || ''}
-                    onChange={(e) => setEditedVenue({ ...editedVenue, capacity: Number(e.target.value) })}
-                    required
-                  />
+                  <label className="form-label">Number of Tables</label>
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      value={editedVenue.numberOfTables || ''}
+                      onChange={(e) => setEditedVenue({ ...editedVenue, numberOfTables: Number(e.target.value) })}
+                      className="text-input"
+                    />
+                  ) : (
+                    <p className="text-[var(--font-size-body)] opacity-90">{venueData?.numberOfTables} tables</p>
+                  )}
                 </div>
                 <div>
                   <label className="form-label">Price per 30 min (R)</label>
@@ -440,8 +443,8 @@ function VenueDashboardContent() {
                   <p className="text-[var(--font-size-body)]">{venueData?.address}</p>
                 </div>
                 <div>
-                  <p className="text-[var(--font-size-subheadline)] opacity-80">Capacity</p>
-                  <p className="text-[var(--font-size-body)]">{venueData?.capacity} people</p>
+                  <p className="text-[var(--font-size-subheadline)] opacity-80">Number of Tables</p>
+                  <p className="text-[var(--font-size-body)]">{venueData?.numberOfTables} tables</p>
                 </div>
                 <div>
                   <p className="text-[var(--font-size-subheadline)] opacity-80">Price per 30 min</p>
