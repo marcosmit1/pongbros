@@ -145,200 +145,202 @@ export default function Register() {
   };
 
   return (
-    <div className="h-full relative overflow-hidden py-8">
+    <div className="min-h-screen flex flex-col relative">
       {/* Background with bubble effect */}
-      <div className="bubble-bg" />
+      <div className="bubble-bg fixed inset-0" />
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <Image
-              src="/images/pong-bros-logo.png"
-              alt="Pong Bros Logo"
-              width={120}
-              height={120}
-              className="mx-auto logo-glow hover:scale-105 transition-transform duration-300"
-              priority
-            />
-          </Link>
-          <h2 className="mt-6 text-[var(--font-size-title)] font-[var(--font-weight-bold)] foam-text">
-            Register Your Bar
-          </h2>
-          <p className="mt-2 text-[var(--font-size-subheadline)] text-beer-foam opacity-80">
-            Join the Pong Bros network
-          </p>
+      <div className="flex-1 py-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-block">
+              <Image
+                src="/images/pong-bros-logo.png"
+                alt="Pong Bros Logo"
+                width={120}
+                height={120}
+                className="mx-auto logo-glow hover:scale-105 transition-transform duration-300"
+                priority
+              />
+            </Link>
+            <h2 className="mt-6 text-[var(--font-size-title)] font-[var(--font-weight-bold)] foam-text">
+              Register Your Bar
+            </h2>
+            <p className="mt-2 text-[var(--font-size-subheadline)] text-beer-foam opacity-80">
+              Join the Pong Bros network
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 mb-8">
-        <div className="card mx-4 sm:mx-0">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="status-badge error">
-                {error}
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 mb-8">
+          <div className="card mx-4 sm:mx-0">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              {error && (
+                <div className="status-badge error">
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="email" className="form-label">
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="text-input"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="Enter your email"
+                />
               </div>
-            )}
 
-            <div>
-              <label htmlFor="email" className="form-label">
-                Email Address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="text-input"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="Enter your email"
-              />
-            </div>
+              <div>
+                <label htmlFor="password" className="form-label">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  className="text-input"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Enter your password"
+                />
+                <p className="helper-text">
+                  Password must be at least 6 characters long
+                </p>
+              </div>
 
-            <div>
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="text-input"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Enter your password"
-              />
-              <p className="helper-text">
-                Password must be at least 6 characters long
-              </p>
-            </div>
+              <div>
+                <label htmlFor="name" className="form-label">
+                  Bar Name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  className="text-input"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter your bar's name"
+                />
+              </div>
 
-            <div>
-              <label htmlFor="name" className="form-label">
-                Bar Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                className="text-input"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter your bar's name"
-              />
-            </div>
+              <div>
+                <label htmlFor="address" className="form-label">
+                  Address
+                </label>
+                <AddressAutocomplete
+                  onSelect={(address, latitude, longitude) => {
+                    setFormData({
+                      ...formData,
+                      address,
+                      latitude,
+                      longitude
+                    });
+                  }}
+                  defaultValue={formData.address}
+                  className="text-input"
+                />
+              </div>
 
-            <div>
-              <label htmlFor="address" className="form-label">
-                Address
-              </label>
-              <AddressAutocomplete
-                onSelect={(address, latitude, longitude) => {
-                  setFormData({
-                    ...formData,
-                    address,
-                    latitude,
-                    longitude
-                  });
-                }}
-                defaultValue={formData.address}
-                className="text-input"
-              />
-            </div>
+              <div>
+                <label htmlFor="description" className="form-label">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  required
+                  rows={3}
+                  className="text-input"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Describe your bar"
+                />
+              </div>
 
-            <div>
-              <label htmlFor="description" className="form-label">
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                required
-                rows={3}
-                className="text-input"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe your bar"
-              />
-            </div>
+              <div>
+                <label htmlFor="numberOfTables" className="form-label">
+                  Number of Tables
+                </label>
+                <input
+                  id="numberOfTables"
+                  name="numberOfTables"
+                  type="number"
+                  required
+                  className="text-input"
+                  value={formData.numberOfTables}
+                  onChange={(e) => setFormData({ ...formData, numberOfTables: e.target.value })}
+                  placeholder="Number of beer pong tables"
+                />
+              </div>
 
-            <div>
-              <label htmlFor="numberOfTables" className="form-label">
-                Number of Tables
-              </label>
-              <input
-                id="numberOfTables"
-                name="numberOfTables"
-                type="number"
-                required
-                className="text-input"
-                value={formData.numberOfTables}
-                onChange={(e) => setFormData({ ...formData, numberOfTables: e.target.value })}
-                placeholder="Number of beer pong tables"
-              />
-            </div>
+              <div>
+                <label htmlFor="pricePerHour" className="form-label">
+                  Price per 30 min
+                </label>
+                <input
+                  id="pricePerHour"
+                  name="pricePerHour"
+                  type="number"
+                  required
+                  className="text-input"
+                  value={formData.pricePerHour}
+                  onChange={(e) => setFormData({ ...formData, pricePerHour: e.target.value })}
+                  placeholder="Price per 30 min in ZAR"
+                />
+              </div>
 
-            <div>
-              <label htmlFor="pricePerHour" className="form-label">
-                Price per 30 min
-              </label>
-              <input
-                id="pricePerHour"
-                name="pricePerHour"
-                type="number"
-                required
-                className="text-input"
-                value={formData.pricePerHour}
-                onChange={(e) => setFormData({ ...formData, pricePerHour: e.target.value })}
-                placeholder="Price per 30 min in ZAR"
-              />
-            </div>
+              <div>
+                <label htmlFor="imageFile" className="form-label">
+                  Bar Image
+                </label>
+                <input
+                  id="imageFile"
+                  name="imageFile"
+                  type="file"
+                  accept="image/*"
+                  required
+                  className="text-input file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
+                           file:text-sm file:font-semibold file:bg-primary file:text-beer-dark-brown
+                           hover:file:bg-opacity-80"
+                  onChange={handleImageChange}
+                />
+              </div>
 
-            <div>
-              <label htmlFor="imageFile" className="form-label">
-                Bar Image
-              </label>
-              <input
-                id="imageFile"
-                name="imageFile"
-                type="file"
-                accept="image/*"
-                required
-                className="text-input file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
-                         file:text-sm file:font-semibold file:bg-primary file:text-beer-dark-brown
-                         hover:file:bg-opacity-80"
-                onChange={handleImageChange}
-              />
-            </div>
+              <div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="primary-button w-full flex justify-center items-center min-h-[48px]"
+                >
+                  {loading ? (
+                    <div className="loading-container scale-75">
+                      <div className="loading-bubble"></div>
+                      <div className="loading-bubble"></div>
+                      <div className="loading-bubble"></div>
+                    </div>
+                  ) : (
+                    'Register Bar'
+                  )}
+                </button>
+              </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="primary-button w-full flex justify-center items-center min-h-[48px]"
-              >
-                {loading ? (
-                  <div className="loading-container scale-75">
-                    <div className="loading-bubble"></div>
-                    <div className="loading-bubble"></div>
-                    <div className="loading-bubble"></div>
-                  </div>
-                ) : (
-                  'Register Bar'
-                )}
-              </button>
-            </div>
-
-            <div className="text-center mt-4">
-              <Link href="/login" className="text-link">
-                Already have an account? Sign in
-              </Link>
-            </div>
-          </form>
+              <div className="text-center mt-4">
+                <Link href="/login" className="text-link">
+                  Already have an account? Sign in
+                </Link>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

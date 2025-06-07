@@ -30,13 +30,16 @@ export default function ClientLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+
   return (
     <div className="flex flex-col h-screen">
       <TopNav />
       <main className="flex-1 h-full">
         {children}
       </main>
-      <Footer />
+      {isHomePage && <Footer />}
     </div>
   );
 } 

@@ -14,10 +14,10 @@ export default function Home() {
         <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <Link href="/" className="inline-block">
-              <Image
+        <Image
                 src="/images/pong-bros-logo.png"
                 alt="Pong Bros Logo"
-                width={180}
+          width={180}
                 height={180}
                 className="mx-auto logo-glow hover:scale-105 transition-transform duration-300"
               />
