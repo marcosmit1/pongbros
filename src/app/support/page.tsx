@@ -34,17 +34,17 @@ export default function Support() {
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium mb-2">How do I create an account?</h3>
-              <p className="opacity-80">Download PongBros from the App Store, open the app, and tap "Sign Up". You can register with your email address or sign in with Apple.</p>
+              <p className="opacity-80">Download PongBros from the App Store, open the app, and tap &quot;Sign Up&quot;. You can register with your email address or sign in with Apple.</p>
             </div>
 
             <div>
               <h3 className="text-lg font-medium mb-2">How do I add Beer Buddies (friends)?</h3>
-              <p className="opacity-80">Go to Settings &gt; Beer Buddies &gt; Add Friend. Enter your friend's email address to send them a friend request.</p>
+              <p className="opacity-80">Go to Settings &gt; Beer Buddies &gt; Add Friend. Enter your friend&apos;s email address to send them a friend request.</p>
             </div>
 
             <div>
               <h3 className="text-lg font-medium mb-2">How do I start a game?</h3>
-              <p className="opacity-80">Tap "New Game" on the home screen, select players, choose your cup formation (6 or 10 cups), and start playing!</p>
+              <p className="opacity-80">Tap &quot;New Game&quot; on the home screen, select players, choose your cup formation (6 or 10 cups), and start playing!</p>
             </div>
 
             <div>
@@ -54,21 +54,21 @@ export default function Support() {
 
             <div>
               <h3 className="text-lg font-medium mb-2">How do I book a table at a venue?</h3>
-              <p className="opacity-80">Go to "Venues" tab, select a participating bar/venue, choose your preferred time slot, and book your table.</p>
+              <p className="opacity-80">Go to &quot;Venues&quot; tab, select a participating bar/venue, choose your preferred time slot, and book your table.</p>
             </div>
 
             <div>
               <h3 className="text-lg font-medium mb-2">How do I join a tournament?</h3>
-              <p className="opacity-80">Check the "Tournaments" tab for upcoming events, or create your own tournament and invite friends.</p>
+              <p className="opacity-80">Check the &quot;Tournaments&quot; tab for upcoming events, or create your own tournament and invite friends.</p>
             </div>
 
             <div>
               <h3 className="text-lg font-medium mb-2">How do I reset my password?</h3>
-              <p className="opacity-80">On the login screen, tap "Forgot Password" and enter your email. You'll receive a reset link within a few minutes.</p>
+              <p className="opacity-80">On the login screen, tap &quot;Forgot Password&quot; and enter your email. You&apos;ll receive a reset link within a few minutes.</p>
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-2">Why can't I see my friend's game invite?</h3>
+              <h3 className="text-lg font-medium mb-2">Why can&apos;t I see my friend&apos;s game invite?</h3>
               <p className="opacity-80">Make sure both players have the latest app version and are connected to the internet. Check your notifications settings in iOS Settings &gt; PongBros.</p>
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function Support() {
               <ul className="list-disc list-inside opacity-80 space-y-1">
                 <li>Check your internet connection</li>
                 <li>Verify email and password are correct</li>
-                <li>Try "Forgot Password" if needed</li>
+                <li>Try &quot;Forgot Password&quot; if needed</li>
                 <li>Clear app cache by reinstalling</li>
               </ul>
             </div>
@@ -125,7 +125,7 @@ export default function Support() {
             <div>
               <h3 className="text-lg font-medium mb-2">Camera/Photo issues</h3>
               <ul className="list-disc list-inside opacity-80 space-y-1">
-                <li>Go to iOS Settings &gt; Privacy & Security &gt; Camera</li>
+                <li>Go to iOS Settings &gt; Privacy &amp; Security &gt; Camera</li>
                 <li>Make sure PongBros has camera permission</li>
                 <li>Restart the app after changing permissions</li>
               </ul>
@@ -142,7 +142,7 @@ export default function Support() {
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium mb-2">How do I change my profile picture?</h3>
-              <p className="opacity-80">Go to Settings, tap your profile picture, and choose "Take Photo" or "Choose from Library".</p>
+              <p className="opacity-80">Go to Settings, tap your profile picture, and choose &quot;Take Photo&quot; or &quot;Choose from Library&quot;.</p>
             </div>
 
             <div>
@@ -152,7 +152,7 @@ export default function Support() {
 
             <div>
               <h3 className="text-lg font-medium mb-2">How do I delete my account?</h3>
-              <p className="opacity-80">Email support@pongbros.co.za with your request. We'll permanently delete your account and data within 30 days.</p>
+              <p className="opacity-80">Email support@pongbros.co.za with your request. We&apos;ll permanently delete your account and data within 30 days.</p>
             </div>
 
             <div>
