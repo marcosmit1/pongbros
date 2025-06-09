@@ -44,6 +44,12 @@ export default function Home() {
             >
               Register Your Bar
             </Link>
+            <Link
+              href="/support"
+              className="secondary-button text-center w-[200px] flex items-center justify-center"
+            >
+              Support Center
+            </Link>
           </div>
 
           {/* Welcome Message */}
