@@ -82,7 +82,7 @@ export default function Support() {
           
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium mb-2">App won't open or crashes</h3>
+              <h3 className="text-lg font-medium mb-2">App won&apos;t open or crashes</h3>
               <ul className="list-disc list-inside opacity-80 space-y-1">
                 <li>Force close the app and restart it</li>
                 <li>Restart your iPhone/iPad</li>
@@ -208,7 +208,7 @@ export default function Support() {
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium mb-2">How to find participating venues</h3>
-              <p className="opacity-80">Use the "Venues" tab to see bars and locations near you that support PongBros bookings.</p>
+              <p className="opacity-80">Use the &quot;Venues&quot; tab to see bars and locations near you that support PongBros bookings.</p>
             </div>
 
             <div>
