@@ -50,6 +50,12 @@ export default function Home() {
             >
               Support Center
             </Link>
+            <Link
+              href="/privacy"
+              className="secondary-button text-center w-[200px] flex items-center justify-center"
+            >
+              Privacy Policy
+            </Link>
           </div>
 
           {/* Welcome Message */}
