@@ -14,12 +14,14 @@ interface Player {
   userId: string;
   checkedInAt: Timestamp;
   validated: boolean;
+  teamName?: string;
 }
 
 interface ValidatedPlayer {
   username: string;
   userId: string;
   validated: boolean;
+  teamName?: string;
 }
 
 interface BookingUser {
@@ -44,6 +46,9 @@ interface Booking {
   checkedIn?: boolean;
   checkedInAt?: Timestamp;
   players?: Player[];
+  gameMode?: '1v1' | '2v2';
+  team1Name?: string;
+  team2Name?: string;
 }
 
 interface VenueData {
@@ -91,11 +96,16 @@ function VenueDashboardContent() {
   const [selectedBooking, setSelectedBooking] = useState<BookingDisplay | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
+  const [gameMode, setGameMode] = useState<'1v1' | '2v2'>('2v2');
   const [players, setPlayers] = useState<ValidatedPlayer[]>([
-    { username: '', userId: '', validated: false },
-    { username: '', userId: '', validated: false }
+    { username: '', userId: '', validated: false, teamName: '' },
+    { username: '', userId: '', validated: false, teamName: '' },
+    { username: '', userId: '', validated: false, teamName: '' },
+    { username: '', userId: '', validated: false, teamName: '' }
   ]);
-  const [isSearching, setIsSearching] = useState<boolean[]>([false, false]);
+  const [team1Name, setTeam1Name] = useState('');
+  const [team2Name, setTeam2Name] = useState('');
+  const [isSearching, setIsSearching] = useState<boolean[]>([false, false, false, false]);
   const [venueData, setVenueData] = useState<VenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -226,26 +236,54 @@ function VenueDashboardContent() {
         return;
       }
 
+      if (!team1Name.trim() || !team2Name.trim()) {
+        setError('Please enter names for both teams');
+        return;
+      }
+
       const bookingRef = doc(db, 'bookings', bookingId);
       const now = Timestamp.now();
+
+      // Assign team names to players based on game mode
+      const playersWithTeams = gameMode === '1v1'
+        ? [
+            { ...players[0], teamName: team1Name },
+            { ...players[1], teamName: team2Name }
+          ]
+        : [
+            { ...players[0], teamName: team1Name },
+            { ...players[1], teamName: team1Name },
+            { ...players[2], teamName: team2Name },
+            { ...players[3], teamName: team2Name }
+          ];
+
       await updateDoc(bookingRef, {
         checkedIn: true,
         checkedInAt: now,
-        players: players.map(player => ({
+        players: playersWithTeams.map(player => ({
           username: player.username,
           userId: player.userId,
-          checkedInAt: now
+          checkedInAt: now,
+          teamName: player.teamName
         })),
         status: 'active',
-        updatedAt: now
+        updatedAt: now,
+        gameMode,
+        team1Name,
+        team2Name
       });
 
       setSuccess('Players checked in successfully');
       setIsCheckInModalOpen(false);
       setPlayers([
-        { username: '', userId: '', validated: false },
-        { username: '', userId: '', validated: false }
+        { username: '', userId: '', validated: false, teamName: '' },
+        { username: '', userId: '', validated: false, teamName: '' },
+        { username: '', userId: '', validated: false, teamName: '' },
+        { username: '', userId: '', validated: false, teamName: '' }
       ]);
+      setTeam1Name('');
+      setTeam2Name('');
+      setGameMode('2v2');
     } catch (error) {
       console.error('Error checking in:', error);
       setError('Failed to check in players. Please try again.');
@@ -352,6 +390,21 @@ function VenueDashboardContent() {
       console.error('Error fetching booking details:', error);
       setError('Failed to load booking details');
     }
+  };
+
+  const openCheckInModal = () => {
+    setIsModalOpen(false);
+    setIsCheckInModalOpen(true);
+    setGameMode('2v2');
+    setPlayers([
+      { username: '', userId: '', validated: false, teamName: '' },
+      { username: '', userId: '', validated: false, teamName: '' },
+      { username: '', userId: '', validated: false, teamName: '' },
+      { username: '', userId: '', validated: false, teamName: '' }
+    ]);
+    setTeam1Name('');
+    setTeam2Name('');
+    setIsSearching([false, false, false, false]);
   };
 
   useEffect(() => {
@@ -835,10 +888,7 @@ function VenueDashboardContent() {
               {selectedBooking.status === 'confirmed' && !selectedBooking.checkedIn && selectedTab === 'upcoming' && (
                 <div className="pt-2">
                   <button
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      setIsCheckInModalOpen(true);
-                    }}
+                    onClick={openCheckInModal}
                     className="primary-button w-full py-3"
                   >
                     Check In Players
@@ -902,7 +952,7 @@ function VenueDashboardContent() {
           onClick={() => setIsCheckInModalOpen(false)}
         >
           <div 
-            className="bg-[var(--background)] rounded-xl max-w-md w-full overflow-hidden shadow-xl"
+            className="bg-[var(--background)] rounded-xl max-w-5xl w-full overflow-hidden shadow-xl"
             onClick={e => e.stopPropagation()}
           >
             <div className="bg-[var(--beer-amber)] p-6">
@@ -915,66 +965,214 @@ function VenueDashboardContent() {
             </div>
 
             <div className="p-6 space-y-6">
-              <div className="space-y-4">
-                {players.map((player, index) => (
-                  <div key={index}>
-                    <label 
-                      className="text-[var(--font-size-subheadline)] opacity-80 mb-1 block"
-                      htmlFor={`player${index + 1}`}
-                    >
-                      Player {index + 1} Username
-                    </label>
-                    <div className="relative">
-                      <input
-                        id={`player${index + 1}`}
-                        type="text"
-                        value={player.username}
-                        onChange={(e) => {
-                          const newUsername = e.target.value;
-                          setPlayers(prev => {
-                            const updated = [...prev];
-                            updated[index] = {
-                              ...updated[index],
-                              username: newUsername,
-                              validated: false
-                            };
-                            return updated;
-                          });
-                          debouncedSearch(newUsername, index);
-                        }}
-                        className={`text-input w-full pr-10 ${
-                          player.username && (player.validated ? 'border-green-500' : 'border-red-500')
-                        }`}
-                        placeholder="Enter username"
-                      />
-                      {player.username && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          {isSearching[index] ? (
-                            <div className="w-5 h-5 border-2 border-[var(--beer-amber)] border-t-transparent rounded-full animate-spin"></div>
-                          ) : player.validated ? (
-                            <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          ) : (
-                            <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {player.username && !player.validated && !isSearching[index] && (
-                      <p className="text-red-500 text-sm mt-1">Username not found</p>
-                    )}
-                  </div>
-                ))}
+              {/* Game Mode Selection */}
+              <div className="max-w-md mx-auto">
+                <label className="text-[var(--font-size-subheadline)] opacity-80 block text-center mb-2">
+                  Game Mode
+                </label>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      setGameMode('1v1');
+                      setPlayers([
+                        { username: '', userId: '', validated: false, teamName: '' },
+                        { username: '', userId: '', validated: false, teamName: '' }
+                      ]);
+                    }}
+                    className={`flex-1 py-3 px-6 rounded-lg border transition-all duration-200 ${
+                      gameMode === '1v1'
+                        ? 'bg-[var(--beer-amber)] text-black border-[var(--beer-amber)] scale-105'
+                        : 'border-[var(--beer-amber)]/20 hover:border-[var(--beer-amber)]/40'
+                    }`}
+                  >
+                    1v1
+                  </button>
+                  <button
+                    onClick={() => {
+                      setGameMode('2v2');
+                      setPlayers([
+                        { username: '', userId: '', validated: false, teamName: '' },
+                        { username: '', userId: '', validated: false, teamName: '' },
+                        { username: '', userId: '', validated: false, teamName: '' },
+                        { username: '', userId: '', validated: false, teamName: '' }
+                      ]);
+                    }}
+                    className={`flex-1 py-3 px-6 rounded-lg border transition-all duration-200 ${
+                      gameMode === '2v2'
+                        ? 'bg-[var(--beer-amber)] text-black border-[var(--beer-amber)] scale-105'
+                        : 'border-[var(--beer-amber)]/20 hover:border-[var(--beer-amber)]/40'
+                    }`}
+                  >
+                    2v2
+                  </button>
+                </div>
               </div>
 
-              <div className="flex gap-4">
+              {/* Teams Section */}
+              <div className="grid grid-cols-2 gap-8">
+                {/* Team 1 */}
+                <div className="bg-[var(--beer-amber)]/5 rounded-lg p-6 space-y-4 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[var(--beer-amber)]/5 to-transparent pointer-events-none"></div>
+                  <div className="relative space-y-4">
+                    <div>
+                      <label className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] block text-[var(--beer-amber)]">
+                        Team 1
+                      </label>
+                      <input
+                        type="text"
+                        value={team1Name}
+                        onChange={(e) => setTeam1Name(e.target.value)}
+                        className="text-input w-full mt-2"
+                        placeholder="Enter team name"
+                      />
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {players.slice(0, gameMode === '1v1' ? 1 : 2).map((player, index) => (
+                        <div key={index} className="space-y-1">
+                          <label 
+                            className="text-[var(--font-size-subheadline)] opacity-80 block"
+                            htmlFor={`team1-player${index + 1}`}
+                          >
+                            Player {index + 1}
+                          </label>
+                          <div className="relative">
+                            <input
+                              id={`team1-player${index + 1}`}
+                              type="text"
+                              value={player.username}
+                              onChange={(e) => {
+                                const newUsername = e.target.value;
+                                setPlayers(prev => {
+                                  const updated = [...prev];
+                                  updated[index] = {
+                                    ...updated[index],
+                                    username: newUsername,
+                                    validated: false
+                                  };
+                                  return updated;
+                                });
+                                debouncedSearch(newUsername, index);
+                              }}
+                              className={`text-input w-full pr-10 transition-colors duration-200 ${
+                                player.username && (player.validated ? 'border-green-500' : 'border-red-500')
+                              }`}
+                              placeholder="Enter username"
+                            />
+                            {player.username && (
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                {isSearching[index] ? (
+                                  <div className="w-5 h-5 border-2 border-[var(--beer-amber)] border-t-transparent rounded-full animate-spin"></div>
+                                ) : player.validated ? (
+                                  <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          {player.username && !player.validated && !isSearching[index] && (
+                            <p className="text-red-500 text-sm">Username not found</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Team 2 */}
+                <div className="bg-[var(--beer-amber)]/5 rounded-lg p-6 space-y-4 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-bl from-[var(--beer-amber)]/5 to-transparent pointer-events-none"></div>
+                  <div className="relative space-y-4">
+                    <div>
+                      <label className="text-[var(--font-size-headline)] font-[var(--font-weight-semibold)] block text-[var(--beer-amber)]">
+                        Team 2
+                      </label>
+                      <input
+                        type="text"
+                        value={team2Name}
+                        onChange={(e) => setTeam2Name(e.target.value)}
+                        className="text-input w-full mt-2"
+                        placeholder="Enter team name"
+                      />
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {players.slice(gameMode === '1v1' ? 1 : 2).map((player, index) => {
+                        const actualIndex = gameMode === '1v1' ? 1 : index + 2;
+                        return (
+                          <div key={actualIndex} className="space-y-1">
+                            <label 
+                              className="text-[var(--font-size-subheadline)] opacity-80 block"
+                              htmlFor={`team2-player${index + 1}`}
+                            >
+                              Player {index + 1}
+                            </label>
+                            <div className="relative">
+                              <input
+                                id={`team2-player${index + 1}`}
+                                type="text"
+                                value={player.username}
+                                onChange={(e) => {
+                                  const newUsername = e.target.value;
+                                  setPlayers(prev => {
+                                    const updated = [...prev];
+                                    updated[actualIndex] = {
+                                      ...updated[actualIndex],
+                                      username: newUsername,
+                                      validated: false
+                                    };
+                                    return updated;
+                                  });
+                                  debouncedSearch(newUsername, actualIndex);
+                                }}
+                                className={`text-input w-full pr-10 transition-colors duration-200 ${
+                                  player.username && (player.validated ? 'border-green-500' : 'border-red-500')
+                                }`}
+                                placeholder="Enter username"
+                              />
+                              {player.username && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                  {isSearching[actualIndex] ? (
+                                    <div className="w-5 h-5 border-2 border-[var(--beer-amber)] border-t-transparent rounded-full animate-spin"></div>
+                                  ) : player.validated ? (
+                                    <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  ) : (
+                                    <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            {player.username && !player.validated && !isSearching[actualIndex] && (
+                              <p className="text-red-500 text-sm">Username not found</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 max-w-md mx-auto">
                 <button
                   onClick={() => handleCheckIn(selectedBooking.id, players)}
-                  className="primary-button flex-1 py-3"
-                  disabled={players.some(p => !p.validated) || isSearching.some(s => s)}
+                  className="primary-button flex-1 py-3 transition-transform duration-200 hover:scale-105"
+                  disabled={
+                    players.slice(0, gameMode === '1v1' ? 2 : 4).some(p => !p.validated) ||
+                    isSearching.some(s => s) ||
+                    !team1Name.trim() ||
+                    !team2Name.trim()
+                  }
                 >
                   Check In Players
                 </button>
@@ -982,11 +1180,16 @@ function VenueDashboardContent() {
                   onClick={() => {
                     setIsCheckInModalOpen(false);
                     setPlayers([
-                      { username: '', userId: '', validated: false },
-                      { username: '', userId: '', validated: false }
+                      { username: '', userId: '', validated: false, teamName: '' },
+                      { username: '', userId: '', validated: false, teamName: '' },
+                      { username: '', userId: '', validated: false, teamName: '' },
+                      { username: '', userId: '', validated: false, teamName: '' }
                     ]);
+                    setTeam1Name('');
+                    setTeam2Name('');
+                    setGameMode('2v2');
                   }}
-                  className="secondary-button flex-1 py-3"
+                  className="secondary-button flex-1 py-3 transition-transform duration-200 hover:scale-105"
                 >
                   Cancel
                 </button>
